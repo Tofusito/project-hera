@@ -1,0 +1,11 @@
+# AnythingLLM stuff
+
+anythingllm/comkey
+anythingllm/documents
+anythingllm/lancedb
+anythingllm/models
+anythingllm/vector-cache
+anythingllm/anythingllm.db
+
+# Ollama stuff
+ollama/ollama_data

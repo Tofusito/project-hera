@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    container_name: ollama_service
+    ports:
+      - "11888:11888"
+    volumes:
+      - ./ollama/ollama_data:/root/.ollama
+    networks:
+      - hera-network
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11888
+
+  anythingllm:
+    build:
+      context: ./anythingllm
+      dockerfile: Dockerfile
+    container_name: anythingllm
+    ports:
+      - "3001:3001"
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - JWT_SECRET=X7gH3qL9zF1wP5vM2cN8bK4tR6yJ0sA3dE8xU2nB9mC5vF7
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_PATH=http://ollama_service:11888
+      - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
+      - OLLAMA_MODEL_TOKEN_LIMIT=4096
+      - EMBEDDING_ENGINE=ollama
+      - EMBEDDING_BASE_PATH=http://ollama_service:11888
+      - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
+      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=8192
+      - VECTOR_DB=lancedb
+      - WHISPER_PROVIDER=local
+      - TTS_PROVIDER=native
+      - PASSWORDMINCHAR=8
+      - WORKSPACE=tofu
+      - API_KEY=7GD7873-HB5447H-MJQ6AFA-AK814NB
+    volumes:
+      - ./anythingllm:/app/server/storage
+      - ./documentos:/app/documentos  # Nuevo volumen para tus documentos
+    restart: always
+    networks:
+      - hera-network    
+
+  hera:
+    build:
+      context: ./hera
+      dockerfile: Dockerfile
+    container_name: hera_app
+    depends_on:
+      ollama:
+        condition: service_started
+      anythingllm:
+        condition: service_started
+    networks:
+      - hera-network
+
+networks:
+  hera-network:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  anythingllm_storage:
