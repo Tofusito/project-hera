@@ -14,6 +14,14 @@ services:
       - hera-network
     environment:
       - OLLAMA_HOST=0.0.0.0:11888
+    deploy:
+      resources:
+        limits:
+          cpus: "6.0"      # Limitar el uso de CPU a 4 núcleos
+          memory: "16g"      # Limitar la memoria a 8 GB
+        reservations:
+          cpus: "4.0"      # Reservar al menos 2 núcleos de CPU
+          memory: "8g"     # Reservar al menos 4 GB de memoria
 
   anythingllm:
     build:
