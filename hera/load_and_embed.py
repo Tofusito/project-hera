@@ -5,7 +5,7 @@ import json
 # Variables de entorno
 WORKSPACE = os.getenv('WORKSPACE')
 API_KEY = os.getenv('API_KEY')
-BASE_URL = "http://localhost:3001"
+BASE_URL = "http://anythingllm:3001"
 DIRECTORY = "/app/documentos"
 
 if not WORKSPACE or not API_KEY:
