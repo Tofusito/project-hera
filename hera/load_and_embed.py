@@ -33,27 +33,6 @@ def upload_file(file_path):
             print(f"Error al cargar el archivo {file_path}: {response.status_code}")
             return None
 
-# Función para comprobar si un documento ya está embebido
-def is_embedded(document_location):
-    response = requests.get(
-        f"{BASE_URL}/api/v1/workspace/{WORKSPACE}/documents",
-        headers={"Authorization": f"Bearer {API_KEY}"}
-    )
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
-
-    if response.status_code == 200:
-        try:
-            documents = response.json()  # Intenta decodificar la respuesta como JSON
-        except ValueError as e:
-            print(f"Error al decodificar JSON: {e}")
-            return False
-        
-        for doc in documents.get('documents', []):
-            if doc['location'] == document_location:
-                return True
-    return False
-
 # Cargar y embebir archivos no cargados
 def load_and_embed_documents():
     adds = []
@@ -64,10 +43,7 @@ def load_and_embed_documents():
             response = upload_file(file_path)
             if response and 'documents' in response:
                 document_location = response['documents'][0]['location']
-                if not is_embedded(document_location):
-                    adds.append(document_location)
-                else:
-                    print(f"El documento ya está embebido: {document_location}")
+                adds.append(document_location)
     
     if adds:
         print(f"Actualizando embeddings para {len(adds)} documentos.")
