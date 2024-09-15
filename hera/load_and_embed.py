@@ -20,8 +20,15 @@ def upload_file(file_path):
             files={"file": file},
             data={"workspace": WORKSPACE}
         )
+        print(f"Response status code: {response.status_code}")
+        print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
+
         if response.status_code == 200:
-            return response.json()
+            try:
+                return response.json()
+            except ValueError as e:
+                print(f"Error al decodificar JSON: {e}")
+                return None
         else:
             print(f"Error al cargar el archivo {file_path}: {response.status_code}")
             return None
@@ -32,8 +39,16 @@ def is_embedded(document_location):
         f"{BASE_URL}/api/v1/workspace/{WORKSPACE}/documents",
         headers={"Authorization": f"Bearer {API_KEY}"}
     )
+    print(f"Response status code: {response.status_code}")
+    print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
+
     if response.status_code == 200:
-        documents = response.json()
+        try:
+            documents = response.json()  # Intenta decodificar la respuesta como JSON
+        except ValueError as e:
+            print(f"Error al decodificar JSON: {e}")
+            return False
+        
         for doc in documents.get('documents', []):
             if doc['location'] == document_location:
                 return True
@@ -69,6 +84,9 @@ def update_embeddings(adds):
         },
         data=json_adds
     )
+    print(f"Response status code: {response.status_code}")
+    print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
+
     if response.status_code == 200:
         print("Embeddings actualizados correctamente.")
     else:
