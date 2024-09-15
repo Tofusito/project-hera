@@ -7,21 +7,22 @@ services:
       dockerfile: Dockerfile
     container_name: ollama_service
     ports:
-      - "11888:11888"
+      - "11434:11434"  # Cambiar el puerto a 11434
     volumes:
       - ./ollama/ollama_data:/root/.ollama
     networks:
       - hera-network
     environment:
-      - OLLAMA_HOST=0.0.0.0:11888
+      - OLLAMA_HOST=0.0.0.0:11434  # Asegurar que el puerto coincida
+      - OLLAMA_KEEP_ALIVE=1h
+      - OLLAMA_MAX_LOADED_MODELS=3
+      - OLLAMA_NUM_PARALLEL=10
+      - OLLAMA_NOPRUNE=0
     deploy:
       resources:
         limits:
-          cpus: "6.0"      # Limitar el uso de CPU a 4 núcleos
-          memory: "16g"      # Limitar la memoria a 8 GB
-        reservations:
-          cpus: "4.0"      # Reservar al menos 2 núcleos de CPU
-          memory: "8g"     # Reservar al menos 4 GB de memoria
+          cpus: "4.0"
+          memory: "12g"
 
   anythingllm:
     build:
@@ -36,38 +37,47 @@ services:
       - STORAGE_DIR=/app/server/storage
       - JWT_SECRET=X7gH3qL9zF1wP5vM2cN8bK4tR6yJ0sA3dE8xU2nB9mC5vF7
       - LLM_PROVIDER=ollama
-      - OLLAMA_BASE_PATH=http://ollama_service:11888
+      - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
       - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
       - OLLAMA_MODEL_TOKEN_LIMIT=4096
       - EMBEDDING_ENGINE=ollama
-      - EMBEDDING_BASE_PATH=http://ollama_service:11888
+      - EMBEDDING_BASE_PATH=http://ollama_service:11434
       - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
       - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=8192
       - VECTOR_DB=lancedb
       - WHISPER_PROVIDER=local
       - TTS_PROVIDER=native
       - PASSWORDMINCHAR=8
-      - WORKSPACE=tofu
-      - API_KEY=7GD7873-HB5447H-MJQ6AFA-AK814NB
+      - WORKSPACE=assistant
+      - API_KEY=BYNK6EQ-XPRM2Q6-QAPCN7P-67JF1XM
     volumes:
       - ./anythingllm:/app/server/storage
-      - ./documentos:/app/documentos  # Nuevo volumen para tus documentos
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: "8g"
     networks:
-      - hera-network    
+      - hera-network
 
   hera:
     build:
       context: ./hera
       dockerfile: Dockerfile
-    container_name: hera_app
+    container_name: hera
+    environment:
+      - PYTHONUNBUFFERED=1
+      - WORKSPACE=assistant  # Configura la variable WORKSPACE
+      - API_KEY=BYNK6EQ-XPRM2Q6-QAPCN7P-67JF1XM  # Configura la variable API_KEY
     depends_on:
-      ollama:
-        condition: service_started
-      anythingllm:
-        condition: service_started
+      - ollama
+      - anythingllm
     networks:
       - hera-network
+    volumes:
+      - ./documentos:/app/documentos
+
 
 networks:
   hera-network:
