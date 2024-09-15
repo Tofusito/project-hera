@@ -1,0 +1,96 @@
+Recopilatorio de Datos Bibliográficos - Ejemplo Ampliado
+
+Nombre: Juan Pérez
+Edad: 35
+Profesión: Ingeniero Civil
+Nacionalidad: Española
+Salario: 50,000 EUR
+Saldo en el Banco: 20,000 EUR
+Gustos: Viajar, Fútbol
+Hobbies: Escalar, Programación
+
+Nombre: Ana Gómez
+Edad: 28
+Profesión: Doctora en Medicina
+Nacionalidad: Argentina
+Salario: 70,000 USD
+Saldo en el Banco: 15,000 USD
+Gustos: Leer, Natación
+Hobbies: Fotografía, Senderismo
+
+Nombre: Luis Martínez
+Edad: 40
+Profesión: Abogado
+Nacionalidad: Chilena
+Salario: 80,000 CLP
+Saldo en el Banco: 50,000 CLP
+
+Gustos: Cine, Cocina
+Hobbies: Golf, Viajar
+
+Nombre: María Rodríguez
+Edad: 32
+Profesión: Profesora
+Nacionalidad: Colombiana
+Salario: 30,000 COP
+Saldo en el Banco: 10,000 COP
+Gustos: Arte, Teatro
+Hobbies: Pintura, Escritura
+
+Nombre: Carlos López
+Edad: 45
+Profesión: Empresario
+Nacionalidad: Mexicana
+Salario: 100,000 MXN
+Saldo en el Banco: 200,000 MXN
+Gustos: Coches, Negocios
+Hobbies: Tenis, Esquí
+
+Nombre: Elena Fernández
+Edad: 29
+Profesión: Psicóloga
+Nacionalidad: Uruguaya
+Salario: 60,000 UYU
+
+Saldo en el Banco: 30,000 UYU
+Gustos: Música, Psicología
+Hobbies: Yoga, Meditación
+
+Nombre: Ricardo Sánchez
+Edad: 37
+Profesión: Desarrollador de Software
+Nacionalidad: Venezolana
+Salario: 90,000 VEF
+Saldo en el Banco: 40,000 VEF
+Gustos: Tecnología, Videojuegos
+Hobbies: Ciclismo, Gaming
+
+Nombre: Laura Ramírez
+Edad: 33
+Profesión: Diseñadora Gráfica
+Nacionalidad: Peruana
+Salario: 45,000 PEN
+Saldo en el Banco: 22,000 PEN
+Gustos: Diseño, Fotografía
+Hobbies: Dibujo, Lectura
+
+Nombre: Daniel Torres
+Edad: 50
+Profesión: Arquitecto
+Nacionalidad: Cubana
+
+Salario: 120,000 CUP
+Saldo en el Banco: 75,000 CUP
+Gustos: Arquitectura, Viajes
+Hobbies: Correr, Fotografía
+
+Nombre: Sofía Morales
+Edad: 26
+Profesión: Periodista
+Nacionalidad: Boliviana
+Salario: 35,000 BOB
+Saldo en el Banco: 12,000 BOB
+Gustos: Política, Literatura
+Hobbies: Escribir, Fotografía
+
+
