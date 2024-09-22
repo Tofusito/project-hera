@@ -37,7 +37,7 @@ services:
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
     volumes:
-      - ./chroma_data:/chroma/chroma
+      - ./chroma/chroma_data:/chroma/chroma
     ports:
       - "8000:8000"
     environment:
@@ -60,7 +60,7 @@ services:
       - LLM_PROVIDER=ollama
       - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
       - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
-      - OLLAMA_MODEL_TOKEN_LIMIT=4096
+      - OLLAMA_MODEL_TOKEN_LIMIT=1024
       - OLLAMA_TIMEOUT=300000
       - EMBEDDING_ENGINE=ollama
       - EMBEDDING_BASE_PATH=http://ollama_service:11434

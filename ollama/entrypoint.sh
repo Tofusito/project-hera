@@ -10,7 +10,7 @@ fi
 
 if ! ollama list | grep -q "nomic-embed-text"; then
   echo "Descargando nomic-embed-text..."
-  ollama pull nomic-embed-text
+  ollama pull nomic-embed-text:v1.5
 else
   echo "El modelo nomic-embed-text ya está presente."
 fi
