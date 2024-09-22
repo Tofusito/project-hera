@@ -16,6 +16,7 @@ services:
       - OLLAMA_HOST=0.0.0.0:11434
       - OLLAMA_KEEP_ALIVE=-1
       - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_MODEL_TOKEN_LIMIT=2048
       - OLLAMA_NUM_PARALLEL=10
       - OLLAMA_NOPRUNE=0
     deploy:
@@ -32,7 +33,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # command: ["ollama", "serve"]  # Comando para iniciar Ollama
 
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
@@ -60,12 +60,12 @@ services:
       - LLM_PROVIDER=ollama
       - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
       - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
-      - OLLAMA_MODEL_TOKEN_LIMIT=1024
+      - OLLAMA_MODEL_TOKEN_LIMIT=2048
       - OLLAMA_TIMEOUT=300000
       - EMBEDDING_ENGINE=ollama
       - EMBEDDING_BASE_PATH=http://ollama_service:11434
-      - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
-      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=512
+      - EMBEDDING_MODEL_PREF=nomic-embed-text:v1.5
+      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=4096
       - VECTOR_DB=chroma
       - CHROMA_ENDPOINT=http://chroma:8000
       - WHISPER_PROVIDER=local
