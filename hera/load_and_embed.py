@@ -11,7 +11,37 @@ DIRECTORY = "/app/documentos"
 if not WORKSPACE or not API_KEY:
     raise ValueError("WORKSPACE y API_KEY deben estar configurados como variables de entorno.")
 
-# Función para cargar un archivo al servidor de AnythingLLM
+def extract_titles_from_items(items):
+    titles = set()
+    for item in items:
+        if item.get('type') == 'file':
+            title = item.get('title')
+            if title:
+                titles.add(title)
+        elif item.get('type') == 'folder':
+            titles.update(extract_titles_from_items(item.get('items', [])))
+    return titles
+
+def get_existing_documents():
+    url = f"{BASE_URL}/api/v1/documents"
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        try:
+            data = response.json()
+            documents = data.get('localFiles', {}).get('items', [])
+            existing_titles = extract_titles_from_items(documents)
+            print(f"Documentos existentes obtenidos: {len(existing_titles)}")
+            return existing_titles
+        except ValueError as e:
+            print(f"Error al decodificar JSON de la respuesta: {e}")
+            return set()
+    else:
+        print(f"Error al obtener documentos existentes: {response.status_code}")
+        return set()
+
 def upload_file(file_path):
     with open(file_path, 'rb') as file:
         response = requests.post(
@@ -20,9 +50,6 @@ def upload_file(file_path):
             files={"file": file},
             data={"workspace": WORKSPACE}
         )
-        print(f"Response status code: {response.status_code}")
-        print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
-
         if response.status_code == 200:
             try:
                 return response.json()
@@ -33,23 +60,30 @@ def upload_file(file_path):
             print(f"Error al cargar el archivo {file_path}: {response.status_code}")
             return None
 
-# Cargar y embebir archivos no cargados
 def load_and_embed_documents():
+    existing_titles = get_existing_documents()
+
     adds = []
     for file_name in os.listdir(DIRECTORY):
         file_path = os.path.join(DIRECTORY, file_name)
         if os.path.isfile(file_path):
+            base_name = os.path.splitext(file_name)[0]
+            expected_title = f"{base_name}.txt"
+
+            if expected_title in existing_titles:
+                print(f"El archivo '{expected_title}' ya ha sido cargado. Omitiendo.")
+                continue
+
             print(f"Cargando archivo: {file_path}")
             response = upload_file(file_path)
             if response and 'documents' in response:
                 document_location = response['documents'][0]['location']
                 adds.append(document_location)
-    
+
     if adds:
         print(f"Actualizando embeddings para {len(adds)} documentos.")
         update_embeddings(adds)
 
-# Función para actualizar embeddings en AnythingLLM
 def update_embeddings(adds):
     json_adds = json.dumps({"adds": adds, "deletes": []})
     response = requests.post(
@@ -60,9 +94,6 @@ def update_embeddings(adds):
         },
         data=json_adds
     )
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")  # Imprimir el contenido de la respuesta
-
     if response.status_code == 200:
         print("Embeddings actualizados correctamente.")
     else:
