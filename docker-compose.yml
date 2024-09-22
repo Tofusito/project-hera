@@ -32,7 +32,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: ["ollama", "serve"]  # Comando para iniciar Ollama
+    # command: ["ollama", "serve"]  # Comando para iniciar Ollama
 
   chroma:
     image: ghcr.io/chroma-core/chroma:latest

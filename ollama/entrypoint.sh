@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -x
+
+ollama serve &
+
 # Descargar los modelos si no están presentes
 if ! ollama list | grep -q "llama3.1:8b-instruct-q4_0"; then
   echo "Descargando llama3.1:8b-instruct-q4_0..."
@@ -16,5 +20,6 @@ else
 fi
 
 # Ejecutar cualquier otro paso necesario aquí...
+wait
 
 # Fin del script
