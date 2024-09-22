@@ -4,11 +4,12 @@ FROM ubuntu:22.04
 # Establece variables de entorno no interactivas (para evitar prompts durante la instalación)
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Actualiza el sistema e instala las dependencias necesarias
-RUN apt-get update && apt-get install -y \
+# Actualiza el sistema, instala dependencias y limpia el cache en un solo paso
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     wget \
+    netcat \
     build-essential \
     libssl-dev \
     libcurl4-openssl-dev \
@@ -19,10 +20,8 @@ RUN apt-get update && apt-get install -y \
 # Instala Ollama usando el script oficial
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Copia el script entrypoint.sh al contenedor
+# Copia el script entrypoint.sh al contenedor y da permisos de ejecución
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-
-# Da permisos de ejecución al script
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Exponer el puerto para Ollama (puerto predeterminado 11434)

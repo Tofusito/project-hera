@@ -9,3 +9,6 @@ anythingllm/anythingllm.db
 
 # Ollama stuff
 ollama/ollama_data
+
+# Chroma stuff
+chroma_data

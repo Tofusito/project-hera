@@ -7,22 +7,43 @@ services:
       dockerfile: Dockerfile
     container_name: ollama_service
     ports:
-      - "11434:11434"  # Cambiar el puerto a 11434
+      - "11434:11434"
     volumes:
       - ./ollama/ollama_data:/root/.ollama
     networks:
       - hera-network
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434  # Asegurar que el puerto coincida
-      - OLLAMA_KEEP_ALIVE=1h
-      - OLLAMA_MAX_LOADED_MODELS=3
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_MAX_LOADED_MODELS=2
       - OLLAMA_NUM_PARALLEL=10
       - OLLAMA_NOPRUNE=0
     deploy:
       resources:
         limits:
-          cpus: "4.0"
-          memory: "12g"
+          cpus: "12.0"
+          memory: "18g"
+        reservations:
+          cpus: "8.0"
+          memory: "16g"
+    restart: unless-stopped  # Reinicia automáticamente a menos que se detenga manualmente
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: ["ollama", "serve"]  # Comando para iniciar Ollama
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    volumes:
+      - ./chroma_data:/chroma/chroma
+    ports:
+      - "8000:8000"
+    environment:
+      - ALLOW_RESET=true
+    networks:
+      - hera-network
 
   anythingllm:
     build:
@@ -40,11 +61,13 @@ services:
       - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
       - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
       - OLLAMA_MODEL_TOKEN_LIMIT=4096
+      - OLLAMA_TIMEOUT=300000
       - EMBEDDING_ENGINE=ollama
       - EMBEDDING_BASE_PATH=http://ollama_service:11434
       - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
-      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=8192
-      - VECTOR_DB=lancedb
+      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=512
+      - VECTOR_DB=chroma
+      - CHROMA_ENDPOINT=http://chroma:8000
       - WHISPER_PROVIDER=local
       - TTS_PROVIDER=native
       - PASSWORDMINCHAR=8
@@ -56,10 +79,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "4.0"
+          cpus: "12.0"
           memory: "8g"
     networks:
       - hera-network
+    depends_on:
+      - ollama
+      - chroma
 
   hera:
     build:
