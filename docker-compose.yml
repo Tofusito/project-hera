@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   ollama:
@@ -9,7 +9,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ./ollama/ollama_data:/root/.ollama
+      - ollama_data:/root/.ollama
     networks:
       - hera-network
     environment:
@@ -37,7 +37,7 @@ services:
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
     volumes:
-      - ./chroma/chroma_data:/chroma/chroma
+      - chroma_data:/chroma/chroma
     ports:
       - "8000:8000"
     environment:
@@ -60,7 +60,7 @@ services:
       - LLM_PROVIDER=ollama
       - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
       - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
-      - OLLAMA_MODEL_TOKEN_LIMIT=2048
+      - OLLAMA_MODEL_TOKEN_LIMIT=4096
       - OLLAMA_TIMEOUT=300000
       - EMBEDDING_ENGINE=ollama
       - EMBEDDING_BASE_PATH=http://ollama_service:11434
@@ -72,9 +72,9 @@ services:
       - TTS_PROVIDER=native
       - PASSWORDMINCHAR=8
       - WORKSPACE=assistant
-      - API_KEY=BYNK6EQ-XPRM2Q6-QAPCN7P-67JF1XM
+      - API_KEY=JXHPF7F-MTQM4KK-PVVWKK5-8467QPY
     volumes:
-      - ./anythingllm:/app/server/storage
+      - anythingllm_storage:/app/server/storage
     restart: always
     deploy:
       resources:
@@ -95,7 +95,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - WORKSPACE=assistant  # Configura la variable WORKSPACE
-      - API_KEY=BYNK6EQ-XPRM2Q6-QAPCN7P-67JF1XM  # Configura la variable API_KEY
+      - API_KEY=JXHPF7F-MTQM4KK-PVVWKK5-8467QPY  # Configura la variable API_KEY
     depends_on:
       - ollama
       - anythingllm
@@ -112,3 +112,4 @@ networks:
 volumes:
   ollama_data:
   anythingllm_storage:
+  chroma_data:

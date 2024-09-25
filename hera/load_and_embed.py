@@ -6,7 +6,7 @@ import json
 WORKSPACE = os.getenv('WORKSPACE')
 API_KEY = os.getenv('API_KEY')
 BASE_URL = "http://anythingllm:3001"
-DIRECTORY = "/app/documentos"
+DIRECTORY = "/app/documentos/converted"
 
 if not WORKSPACE or not API_KEY:
     raise ValueError("WORKSPACE y API_KEY deben estar configurados como variables de entorno.")
