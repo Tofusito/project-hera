@@ -1,0 +1,31 @@
+**Preguntas Frecuentes - Empresa XYZ**
+
+1. **¿Cómo puedo restablecer mi contraseña?**
+   - Ve a la página de inicio de sesión y haz clic en "¿Olvidaste tu contraseña?". Sigue las instrucciones para recibir un correo de restablecimiento.
+
+2. **¿Cuáles son los horarios de atención al cliente?**
+   - Nuestro equipo de soporte está disponible de lunes a viernes, de 9:00 a 18:00.
+
+3. **¿Qué métodos de pago aceptan?**
+   - Aceptamos tarjetas de crédito, transferencias bancarias y PayPal.
+
+4. **¿Cómo puedo contactar al departamento de ventas?**
+   - Puedes enviar un correo a ventas@empresa.xyz o llamar al +123 456 7890.
+
+5. **¿Ofrecen descuentos por volumen?**
+   - Sí, ofrecemos descuentos para compras al por mayor. Contacta a nuestro equipo de ventas para más información.
+
+6. **¿Dónde puedo encontrar la documentación técnica del Producto ABC?**
+   - La documentación está disponible en nuestro sitio web bajo la sección "Recursos" o puedes solicitarla directamente a soporte técnico.
+
+7. **¿Qué garantía ofrecen para sus productos?**
+   - Ofrecemos una garantía de 12 meses para todos nuestros productos contra defectos de fabricación.
+
+8. **¿Cómo puedo solicitar una demostración del producto?**
+   - Completa el formulario de solicitud en nuestro sitio web o contacta a nuestro equipo de ventas para programar una demostración personalizada.
+
+9. **¿Qué idiomas soporta su plataforma?**
+   - Nuestra plataforma está disponible en español, inglés, francés y alemán.
+
+10. **¿Cómo puedo actualizar mi información de contacto?**
+    - Inicia sesión en tu cuenta, ve a la sección "Perfil" y actualiza tus datos personales.
