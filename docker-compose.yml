@@ -104,6 +104,7 @@ services:
       - hera-network
     volumes:
       - ./documentos:/app/documentos
+      - ./hera/session:/app/session
 
 networks:
   hera-network:

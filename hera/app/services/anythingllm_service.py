@@ -20,6 +20,8 @@ class AnythingLLMService:
         self.password = os.getenv('PASSWORD')  # Obtenemos la contraseña de la variable de entorno
         self.jwt_secret = os.getenv('JWT_SECRET')  # Obtenemos el JWT_SECRET de la variable de entorno
         self.api_key = os.getenv('API_KEY')
+        self.api_key_path = "/app/session/api_key"  # Directorio donde se guardará la API Key
+
 
         logger.info(f"Inicializando AnythingLLMService con base_url: {self.base_url}")
         logger.info(f"Workspace obtenido: {self.workspace}")
@@ -166,13 +168,16 @@ class AnythingLLMService:
                 api_secret = api_key_data['apiKey']['secret']
                 logger.info(f"API Secret obtenida: {api_secret}")
 
+                # Asegurar que el directorio /app/session exista
+                os.makedirs(os.path.dirname(self.api_key_path), exist_ok=True)
+
                 # Guardar el 'secret' en el archivo 'api_key'
                 try:
-                    with open('api_key', 'w') as f:
+                    with open(self.api_key_path, 'w') as f:
                         f.write(api_secret)
-                    logger.info("La API Secret ha sido guardada correctamente en el archivo 'api_key'.")
+                    logger.info(f"La API Secret ha sido guardada correctamente en {self.api_key_path}.")
                 except Exception as e:
-                    logger.error(f"Error al escribir en el archivo 'api_key': {e}")
+                    logger.error(f"Error al escribir en el archivo '{self.api_key_path}': {e}")
                     return False
 
                 # Opcional: también establecer como variable de entorno
@@ -192,24 +197,23 @@ class AnythingLLMService:
 
     def load_api_key(self):
         """
-        Carga la API Key desde el archivo 'api_key' si existe.
+        Carga la API Key desde el archivo 'api_key' en /app/session si existe.
 
         Returns:
             bool: True si la API Key se cargó correctamente, False si el archivo no existe o hay un error.
         """
-        api_key_file = 'api_key'
-        logger.info(f"Intentando cargar la API Key desde el archivo '{api_key_file}'...")
-        if os.path.exists(api_key_file):
+        logger.info(f"Intentando cargar la API Key desde el archivo '{self.api_key_path}'...")
+        if os.path.exists(self.api_key_path):
             try:
-                with open(api_key_file, 'r') as f:
+                with open(self.api_key_path, 'r') as f:
                     self.api_key = f.read().strip()
-                logger.info(f"API Key cargada correctamente desde el archivo '{api_key_file}': {self.api_key}")
+                logger.info(f"API Key cargada correctamente desde el archivo '{self.api_key_path}': {self.api_key}")
                 return True
             except Exception as e:
-                logger.error(f"Error al leer el archivo 'api_key': {e}")
+                logger.error(f"Error al leer el archivo '{self.api_key_path}': {e}")
                 return False
         else:
-            logger.info(f"El archivo 'api_key' no existe.")
+            logger.info(f"El archivo '{self.api_key_path}' no existe.")
             return False
 
     def workspace_exists(self):
