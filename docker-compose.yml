@@ -13,12 +13,12 @@ services:
     networks:
       - hera-network
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_KEEP_ALIVE=-1
-      - OLLAMA_MAX_LOADED_MODELS=2
-      - OLLAMA_MODEL_TOKEN_LIMIT=2048
-      - OLLAMA_NUM_PARALLEL=10
-      - OLLAMA_NOPRUNE=0
+      - OLLAMA_HOST=${OLLAMA_HOST}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
+      - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL}
+      - OLLAMA_NOPRUNE=${OLLAMA_NOPRUNE}
     deploy:
       resources:
         limits:
@@ -27,7 +27,7 @@ services:
         reservations:
           cpus: "8.0"
           memory: "16g"
-    restart: unless-stopped  # Reinicia automáticamente a menos que se detenga manualmente
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -55,24 +55,23 @@ services:
     cap_add:
       - SYS_ADMIN
     environment:
-      - STORAGE_DIR=/app/server/storage
-      - JWT_SECRET=X7gH3qL9zF1wP5vM2cN8bK4tR6yJ0sA3dE8xU2nB9mC5vF7
-      - LLM_PROVIDER=ollama
-      - OLLAMA_BASE_PATH=http://ollama_service:11434  # Usa el nombre del servicio en lugar de host.docker.internal
-      - OLLAMA_MODEL_PREF=llama3.1:8b-instruct-q4_0
-      - OLLAMA_MODEL_TOKEN_LIMIT=4096
-      - OLLAMA_TIMEOUT=300000
-      - EMBEDDING_ENGINE=ollama
-      - EMBEDDING_BASE_PATH=http://ollama_service:11434
-      - EMBEDDING_MODEL_PREF=nomic-embed-text:v1.5
-      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=4096
-      - VECTOR_DB=chroma
-      - CHROMA_ENDPOINT=http://chroma:8000
-      - WHISPER_PROVIDER=local
-      - TTS_PROVIDER=native
-      - PASSWORDMINCHAR=8
-      - WORKSPACE=assistant
-      - API_KEY=JXHPF7F-MTQM4KK-PVVWKK5-8467QPY
+      - STORAGE_DIR=${STORAGE_DIR}
+      - JWT_SECRET=${JWT_SECRET}
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - OLLAMA_BASE_PATH=${OLLAMA_BASE_PATH}
+      - OLLAMA_MODEL_PREF=${OLLAMA_MODEL_PREF}
+      - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT}
+      - EMBEDDING_ENGINE=${EMBEDDING_ENGINE}
+      - EMBEDDING_BASE_PATH=${EMBEDDING_BASE_PATH}
+      - EMBEDDING_MODEL_PREF=${EMBEDDING_MODEL_PREF}
+      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=${EMBEDDING_MODEL_MAX_CHUNK_LENGTH}
+      - VECTOR_DB=${VECTOR_DB}
+      - CHROMA_ENDPOINT=${CHROMA_ENDPOINT}
+      - WHISPER_PROVIDER=${WHISPER_PROVIDER}
+      - TTS_PROVIDER=${TTS_PROVIDER}
+      - PASSWORDMINCHAR=${PASSWORDMINCHAR}
+      - WORKSPACE=${WORKSPACE}
     volumes:
       - anythingllm_storage:/app/server/storage
     restart: always
@@ -94,8 +93,10 @@ services:
     container_name: hera
     environment:
       - PYTHONUNBUFFERED=1
-      - WORKSPACE=assistant  # Configura la variable WORKSPACE
-      - API_KEY=JXHPF7F-MTQM4KK-PVVWKK5-8467QPY  # Configura la variable API_KEY
+      - WORKSPACE=${WORKSPACE}
+      - API_KEY=${API_KEY}
+      - PASSWORD=${PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - ollama
       - anythingllm
@@ -103,7 +104,6 @@ services:
       - hera-network
     volumes:
       - ./documentos:/app/documentos
-
 
 networks:
   hera-network:

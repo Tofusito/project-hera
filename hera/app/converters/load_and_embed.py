@@ -10,14 +10,12 @@ logger = setup_logger(__name__)
 class LoadAndEmbed:
     def __init__(self):
         self.workspace = os.getenv('WORKSPACE')
-        self.api_key = os.getenv('API_KEY')
         self.base_url = "http://anythingllm:3001"
         self.directory = "/app/documentos/converted"
-        self.headers = {"Authorization": f"Bearer {self.api_key}"}
 
-        if not self.workspace or not self.api_key:
-            logger.error("WORKSPACE y API_KEY deben estar configurados como variables de entorno.")
-            raise ValueError("WORKSPACE y API_KEY deben estar configurados como variables de entorno.")
+        if not self.workspace:
+            logger.error("WORKSPACE debe estar configurado como variable de entorno.")
+            raise ValueError("WORKSPACE debe estar configurado como variable de entorno.")
 
     def extract_titles_from_items(self, items):
         titles = set()
@@ -86,7 +84,10 @@ class LoadAndEmbed:
         except Exception as e:
             logger.error(f"Error al actualizar embeddings: {e}")
 
-    def load_and_embed_documents(self):
+    def load_and_embed_documents(self, api_key):
+        self.api_key = api_key
+        self.headers = {"Authorization": f"Bearer {self.api_key}"}
+        
         existing_titles = self.get_existing_documents()
         adds = []
 
