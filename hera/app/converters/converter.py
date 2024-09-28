@@ -1,12 +1,13 @@
-# app/converters/converter.py
-
 import os
 import shutil
 import subprocess
-import hashlib
+import pandas as pd
+from docx import Document
+from PyPDF2 import PdfReader
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from utils.file_utils import generate_unique_filename
 from utils.logger import setup_logger
+import zipfile
 
 logger = setup_logger(__name__)
 
@@ -15,89 +16,138 @@ class Converter:
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.max_workers = max_workers
-        self.pdf_extension = '.pdf'
-        self.image_extensions = {'.jpeg', '.jpg', '.png'}
-        self.audio_extensions = {'.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'}
-        self.code_extensions = {
-            '.py', '.java', '.js', '.c', '.cpp', '.cs', '.rb', '.go', '.php',
-            '.yaml', '.yml', '.hcl', '.ts', '.swift', '.kt', '.rs', '.scala',
-            '.pl', '.sh', '.bat', '.ps1', '.lua', '.sql'
-        }
-        self.text_extensions = {'.txt', '.md'}
         os.makedirs(self.output_dir, exist_ok=True)
 
     def convert_pdf_to_txt(self, file_path):
+        """Convierte PDF a txt usando PyPDF2"""
         try:
             txt_file_name = generate_unique_filename(file_path, '.txt')
             output_file = os.path.join(self.output_dir, txt_file_name)
-            command = ['pdftotext', file_path, output_file]
             
-            result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            
-            if result.returncode == 0 and os.path.exists(output_file):
-                os.remove(file_path)
-                logger.info(f"Convertido y eliminado: {file_path} -> {output_file}")
-                return output_file
-            else:
-                logger.error(f"Error al convertir: {file_path}")
-                return None
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Error en pdftotext para {file_path}: {e.stderr.decode().strip()}")
-            return None
+            with open(file_path, 'rb') as f:
+                reader = PdfReader(f)
+                text = ''
+                for page in reader.pages:
+                    text += page.extract_text()
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(text)
+                
+            logger.info(f"PDF convertido a texto: {file_path} -> {output_file}")
+            return output_file
         except Exception as e:
-            logger.error(f"Error inesperado al convertir {file_path}: {e}")
+            logger.error(f"Error al convertir PDF {file_path}: {e}")
             return None
 
-    def delete_image(self, file_path):
+    def convert_doc_to_txt(self, file_path):
+        """Convierte archivos DOCX a texto usando python-docx"""
         try:
-            os.remove(file_path)
-            logger.info(f"Imagen eliminada: {file_path}")
+            txt_file_name = generate_unique_filename(file_path, '.txt')
+            output_file = os.path.join(self.output_dir, txt_file_name)
+
+            doc = Document(file_path)
+            text = "\n".join([p.text for p in doc.paragraphs])
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(text)
+
+            logger.info(f"DOC/DOCX convertido a texto: {file_path} -> {output_file}")
+            return output_file
         except Exception as e:
-            logger.error(f"Error al eliminar imagen {file_path}: {e}")
+            logger.error(f"Error al convertir DOC/DOCX {file_path}: {e}")
+            return None
 
-    def process_audio(self, file_path):
-        logger.info(f"Archivo de audio encontrado (pendiente de procesamiento): {file_path}")
-        # Implementar procesamiento de audio en el futuro
-
-    def copy_code_file(self, file_path):
+    def convert_excel_to_md(self, file_path):
+        """Convierte Excel a formato de tabla markdown usando pandas"""
         try:
-            file_extension = os.path.splitext(file_path)[1].lower()
-            code_file_name = generate_unique_filename(file_path, file_extension)
-            destination_file = os.path.join(self.output_dir, code_file_name)
-            shutil.copy2(file_path, destination_file)
-            logger.info(f"Archivo de código copiado: {file_path} -> {destination_file}")
-        except Exception as e:
-            logger.error(f"Error al copiar archivo de código {file_path}: {e}")
+            # Genera un nombre de archivo único en el formato .md
+            md_file_name = generate_unique_filename(file_path, '.md')
+            output_file = os.path.join(self.output_dir, md_file_name)
+            
+            # Abre el archivo Excel especificando 'openpyxl' como motor
+            xls = pd.ExcelFile(file_path, engine='openpyxl')
+            
+            # Abre el archivo de salida en modo escritura
+            with open(output_file, 'w', encoding='utf-8') as f:
+                # Itera sobre cada hoja del archivo Excel
+                for sheet_name in xls.sheet_names:
+                    df = pd.read_excel(xls, sheet_name=sheet_name)
 
-    def move_text_file(self, file_path):
-        try:
-            file_extension = os.path.splitext(file_path)[1].lower()
-            text_file_name = generate_unique_filename(file_path, file_extension)
-            destination_file = os.path.join(self.output_dir, text_file_name)
-            shutil.move(file_path, destination_file)
-            logger.info(f"Archivo de texto/markdown movido: {file_path} -> {destination_file}")
+                    # Verifica si la hoja está vacía
+                    if df.empty:
+                        logger.info(f"La hoja '{sheet_name}' está vacía en el archivo {file_path}")
+                        continue
+                    
+                    # Escribir el nombre de la hoja como un título de sección en Markdown
+                    f.write(f"# Hoja: {sheet_name}\n\n")
+                    
+                    # Convertir el DataFrame a Markdown
+                    md_table = df.to_markdown(index=False)
+                    f.write(md_table)
+                    f.write("\n\n")
+
+            logger.info(f"Excel convertido a tabla markdown: {file_path} -> {output_file}")
+            return output_file
+        except zipfile.BadZipFile:
+            logger.error(f"Error: El archivo no es un archivo .xlsx válido (no es un archivo ZIP): {file_path}")
+        except ImportError as e:
+            logger.error(f"Error: Falta la dependencia opcional 'tabulate'. Instala la librería usando pip: {e}")
         except Exception as e:
-            logger.error(f"Error al mover archivo de texto/markdown {file_path}: {e}")
+            logger.error(f"Error al convertir Excel {file_path}: {e}")
+        return None
 
     def process_file(self, file_path):
+        """Determina el tipo de archivo y lo convierte a txt o markdown, luego lo elimina"""
         _, ext = os.path.splitext(file_path)
         ext = ext.lower()
-        
-        if ext == self.pdf_extension:
-            self.convert_pdf_to_txt(file_path)
-        elif ext in self.image_extensions:
-            self.delete_image(file_path)
-        elif ext in self.audio_extensions:
-            self.process_audio(file_path)
-        elif ext in self.code_extensions:
-            self.copy_code_file(file_path)
-        elif ext in self.text_extensions:
-            self.move_text_file(file_path)
+
+        success = False
+
+        if ext == '.pdf':
+            success = self.convert_pdf_to_txt(file_path) is not None
+        elif ext in ['.doc', '.docx']:
+            success = self.convert_doc_to_txt(file_path) is not None
+        elif ext in ['.xls', '.xlsx']:
+            success = self.convert_excel_to_md(file_path) is not None
+        elif ext in ['.md', '.txt']:
+            success = self.copy_file_to_root(file_path) is not None
         else:
-            logger.info(f"Archivo ignorado (tipo no manejado): {file_path}")
+            logger.info(f"Formato no soportado: {file_path}")
+
+        # Si el archivo fue procesado correctamente, lo eliminamos
+        if success:
+            try:
+                os.remove(file_path)
+                logger.info(f"Archivo eliminado: {file_path}")
+            except Exception as e:
+                logger.error(f"Error al eliminar el archivo {file_path}: {e}")
+
+    def copy_file_to_root(self, file_path):
+        """Copia el archivo de texto tal cual a la raíz de output_dir"""
+        try:
+            file_extension = os.path.splitext(file_path)[1].lower()
+            file_name = generate_unique_filename(file_path, file_extension)
+            destination_file = os.path.join(self.output_dir, file_name)
+            
+            shutil.copy2(file_path, destination_file)
+            logger.info(f"Archivo copiado: {file_path} -> {destination_file}")
+            return destination_file
+        except Exception as e:
+            logger.error(f"Error al copiar archivo {file_path}: {e}")
+            return None
+
+    def remove_empty_dirs(self, dir_path):
+        """Elimina recursivamente los directorios vacíos"""
+        for root, dirs, files in os.walk(dir_path, topdown=False):
+            if not files and not dirs:
+                try:
+                    os.rmdir(root)
+                    logger.info(f"Directorio vacío eliminado: {root}")
+                except OSError as e:
+                    logger.error(f"No se pudo eliminar el directorio {root}: {e}")
 
     def convert_and_process_documents(self):
-        logger.info("Iniciando conversión y procesamiento de documentos...")
+        logger.info("Iniciando conversión de documentos...")
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = [
                 executor.submit(self.process_file, os.path.join(root, file))
@@ -110,4 +160,6 @@ class Converter:
                     future.result()
                 except Exception as e:
                     logger.error(f"Excepción en hilo: {e}")
-        logger.info("Conversión y procesamiento de documentos completados.")
+        
+        self.remove_empty_dirs(self.input_dir)
+        logger.info("Conversión y limpieza completada.")

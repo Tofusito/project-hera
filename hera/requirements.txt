@@ -1,2 +1,8 @@
 requests
 PyJWT
+pandas
+python-docx
+PyPDF2
+markdownify
+openpyxl
+tabulate
