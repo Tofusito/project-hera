@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import pandas as pd
+import json
 from docx import Document
 from PyPDF2 import PdfReader
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -32,7 +33,7 @@ class Converter:
 
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(text)
-                
+
             logger.info(f"PDF convertido a texto: {file_path} -> {output_file}")
             return output_file
         except Exception as e:
@@ -57,44 +58,56 @@ class Converter:
             logger.error(f"Error al convertir DOC/DOCX {file_path}: {e}")
             return None
 
-    def convert_excel_to_md(self, file_path):
-        """Convierte Excel a formato de tabla markdown usando pandas"""
+    def convert_excel_to_json(self, file_path):
+        """Convierte archivos Excel a JSON usando pandas"""
         try:
-            # Genera un nombre de archivo único en el formato .md
-            md_file_name = generate_unique_filename(file_path, '.md')
-            output_file = os.path.join(self.output_dir, md_file_name)
+            # Generar un nombre de archivo único para el archivo JSON
+            json_file_name = generate_unique_filename(file_path, '.json')
+            output_file = os.path.join(self.output_dir, json_file_name)
             
-            # Abre el archivo Excel especificando 'openpyxl' como motor
-            xls = pd.ExcelFile(file_path, engine='openpyxl')
-            
-            # Abre el archivo de salida en modo escritura
+            logger.debug(f"Archivo de salida JSON: {output_file}")
+
+            # Leer el archivo Excel con pandas
+            df_dict = pd.read_excel(file_path, sheet_name=None)  # sheet_name=None lee todas las hojas
+            logger.debug(f"Hojas encontradas en el Excel: {list(df_dict.keys())}")
+
+            if not df_dict:
+                logger.warning(f"No se encontraron hojas en el archivo Excel: {file_path}")
+                return None
+
+            result = {}
+            for sheet_name, sheet_data in df_dict.items():
+                logger.debug(f"Procesando hoja: {sheet_name}")
+
+                if sheet_data.empty:
+                    logger.warning(f"La hoja '{sheet_name}' está vacía.")
+                    result[sheet_name] = []
+                    continue
+
+                # Verificar las columnas y filas
+                logger.debug(f"Columnas en '{sheet_name}': {list(sheet_data.columns)}")
+                logger.debug(f"Número de filas en '{sheet_name}': {len(sheet_data)}")
+                logger.debug(f"Primeras filas de '{sheet_name}':\n{sheet_data.head()}")
+
+                # Opcional: Ajustar encabezados si es necesario
+                # sheet_data = pd.read_excel(file_path, sheet_name=sheet_name, header=1)  # Por ejemplo, si los encabezados están en la segunda fila
+
+                # Reemplazar NaN con valores nulos para JSON
+                sheet_data = sheet_data.fillna('')  # O usa sheet_data.where(pd.notnull(sheet_data), None) para nulos
+                result[sheet_name] = sheet_data.to_dict(orient='records')
+
+            # Verificar el contenido de 'result' antes de guardar
+            logger.debug(f"Contenido a guardar en JSON:\n{json.dumps(result, ensure_ascii=False, indent=4)[:500]}...")  # Muestra solo los primeros 500 caracteres
+
+            # Guardar la salida en formato JSON
             with open(output_file, 'w', encoding='utf-8') as f:
-                # Itera sobre cada hoja del archivo Excel
-                for sheet_name in xls.sheet_names:
-                    df = pd.read_excel(xls, sheet_name=sheet_name)
+                json.dump(result, f, ensure_ascii=False, indent=4)
 
-                    # Verifica si la hoja está vacía
-                    if df.empty:
-                        logger.info(f"La hoja '{sheet_name}' está vacía en el archivo {file_path}")
-                        continue
-                    
-                    # Escribir el nombre de la hoja como un título de sección en Markdown
-                    f.write(f"# Hoja: {sheet_name}\n\n")
-                    
-                    # Convertir el DataFrame a Markdown
-                    md_table = df.to_markdown(index=False)
-                    f.write(md_table)
-                    f.write("\n\n")
-
-            logger.info(f"Excel convertido a tabla markdown: {file_path} -> {output_file}")
+            logger.info(f"Excel convertido a JSON: {file_path} -> {output_file}")
             return output_file
-        except zipfile.BadZipFile:
-            logger.error(f"Error: El archivo no es un archivo .xlsx válido (no es un archivo ZIP): {file_path}")
-        except ImportError as e:
-            logger.error(f"Error: Falta la dependencia opcional 'tabulate'. Instala la librería usando pip: {e}")
         except Exception as e:
-            logger.error(f"Error al convertir Excel {file_path}: {e}")
-        return None
+            logger.error(f"Error al convertir Excel {file_path}: {e}", exc_info=True)
+            return None
 
     def process_file(self, file_path):
         """Determina el tipo de archivo y lo convierte a txt o markdown, luego lo elimina"""
@@ -108,7 +121,7 @@ class Converter:
         elif ext in ['.doc', '.docx']:
             success = self.convert_doc_to_txt(file_path) is not None
         elif ext in ['.xls', '.xlsx']:
-            success = self.convert_excel_to_md(file_path) is not None
+            success = self.convert_excel_to_json(file_path) is not None
         elif ext in ['.md', '.txt']:
             success = self.copy_file_to_root(file_path) is not None
         else:
@@ -128,7 +141,7 @@ class Converter:
             file_extension = os.path.splitext(file_path)[1].lower()
             file_name = generate_unique_filename(file_path, file_extension)
             destination_file = os.path.join(self.output_dir, file_name)
-            
+
             shutil.copy2(file_path, destination_file)
             logger.info(f"Archivo copiado: {file_path} -> {destination_file}")
             return destination_file
@@ -160,6 +173,7 @@ class Converter:
                     future.result()
                 except Exception as e:
                     logger.error(f"Excepción en hilo: {e}")
-        
+
         self.remove_empty_dirs(self.input_dir)
         logger.info("Conversión y limpieza completada.")
+

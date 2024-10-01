@@ -6,6 +6,7 @@ import subprocess
 import requests
 from services.ollama_service import OllamaService
 from services.anythingllm_service import AnythingLLMService
+from converters.reformat import process_documents  # Importar la función de procesamiento
 from converters.converter import Converter
 from converters.load_and_embed import LoadAndEmbed
 from utils.logger import setup_logger
@@ -64,12 +65,20 @@ def main():
         message = response.get("message", {}).get("content", "No se generó texto.")
         logger.info(f"Saludo generado por Ollama: {message}")
 
-        # Ejecutar conversión y carga
+        # Ejecutar conversión y procesamiento inicial de documentos
         logger.info("Ejecutando conversión de documentos...")
         converter.convert_and_process_documents()
-        logger.info("Cargando y embebiendo documentos...")
+        logger.info("Conversión de documentos completada.")
 
-        # Pasar el api_key al método load_and_embed_documents
+        # Ejecutar procesamiento adicional de documentos (adaptación/reformateo)
+        logger.info("Ejecutando procesamiento adicional de documentos para RAG...")
+        input_dir = "/app/documentos/converted"
+        output_dir = "/app/documentos/reformateados"
+        process_documents(input_dir, output_dir, ollama_service, logger)
+        logger.info("Procesamiento adicional de documentos completado.")
+
+        # Cargar y embebedar documentos procesados
+        logger.info("Cargando y embebiendo documentos...")
         loader.load_and_embed_documents(api_key=api_key)
     else:
         logger.error("No se recibió una respuesta válida de Ollama.")

@@ -19,14 +19,18 @@ services:
       - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
       - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL}
       - OLLAMA_NOPRUNE=${OLLAMA_NOPRUNE}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         limits:
           cpus: "12.0"
           memory: "18g"
         reservations:
-          cpus: "8.0"
-          memory: "16g"
+          devices:
+          - driver: nvidia
+            device_ids: ['all']
+            capabilities: [gpu]
     restart: unless-stopped
     logging:
       driver: "json-file"
