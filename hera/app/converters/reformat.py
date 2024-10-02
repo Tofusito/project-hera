@@ -44,16 +44,14 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                     # Preparar el prompt para Ollama
                     if file.lower().endswith('.json'):
                         prompt = (
-                            "Reformatea el siguiente texto para que sea apto para Retrieval-Augmented Generation (RAG). "
-                            "Devuelve únicamente el texto reformateado sin explicaciones adicionales ni comentarios.\n\n"
+                            "I am providing a json file, I want you to reformat this file to clean nulls, order it and better readable. Return the following content but reformated, only this: \n\n"
                             f"{contenido}"
                         )
                         solicitud_tipo = 'reformateo del contenido JSON'
                         logger.info(f"Prompt preparado para JSON: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
                     else:
                         prompt = (
-                            "Reformatea el siguiente texto para que sea apto para Retrieval-Augmented Generation (RAG). "
-                            "Devuelve únicamente el texto reformateado sin explicaciones adicionales ni comentarios.\n\n"
+                            "I am providing a text file, I want you to reformat this to be better readable. Return the following content but reformated, only this: \n\n"
                             f"{contenido}"
                         )
                         solicitud_tipo = 'reformateo del texto'

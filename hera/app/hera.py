@@ -17,7 +17,7 @@ logger = setup_logger(__name__)
 
 def main():
     # Configuración de servicios
-    model = "llama3.1:8b-instruct-q4_0"
+    model = "llama3.2:3b"
     ollama_url = "http://ollama_service:11434/api/chat"
     ollama_healthcheck_url = "http://ollama_service:11434/api/tags"
     anythingllm_url = "http://anythingllm:3001"  # URL base sin el endpoint
@@ -71,11 +71,11 @@ def main():
         logger.info("Conversión de documentos completada.")
 
         # Ejecutar procesamiento adicional de documentos (adaptación/reformateo)
-        logger.info("Ejecutando procesamiento adicional de documentos para RAG...")
-        input_dir = "/app/documentos/converted"
-        output_dir = "/app/documentos/reformateados"
-        process_documents(input_dir, output_dir, ollama_service, logger)
-        logger.info("Procesamiento adicional de documentos completado.")
+        # logger.info("Ejecutando procesamiento adicional de documentos para RAG...")
+        # input_dir = "/app/documentos/converted"
+        # output_dir = "/app/documentos/reformateados"
+        # process_documents(input_dir, output_dir, ollama_service, logger)
+        # logger.info("Procesamiento adicional de documentos completado.")
 
         # Cargar y embebedar documentos procesados
         logger.info("Cargando y embebiendo documentos...")

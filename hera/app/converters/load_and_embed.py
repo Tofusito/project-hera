@@ -11,7 +11,7 @@ class LoadAndEmbed:
     def __init__(self):
         self.workspace = os.getenv('WORKSPACE')
         self.base_url = "http://anythingllm:3001"
-        self.directory = "/app/documentos/reformateados"
+        self.directory = "/app/documentos/converted"
 
         if not self.workspace:
             logger.error("WORKSPACE debe estar configurado como variable de entorno.")

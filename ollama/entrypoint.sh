@@ -5,11 +5,11 @@ set -x
 ollama serve &
 
 # Descargar los modelos si no están presentes
-if ! ollama list | grep -q "llama3.1:8b-instruct-q4_0"; then
-  echo "Descargando llama3.1:8b-instruct-q4_0..."
-  ollama pull llama3.1:8b-instruct-q4_0
+if ! ollama list | grep -q "ollama run llama3.2:3b"; then
+  echo "Descargando llama3.2:3b..."
+  ollama pull llama3.2:3b
 else
-  echo "El modelo llama3.1:8b-instruct-q4_0 ya está presente."
+  echo "El modelo llama3.2:3b ya está presente."
 fi
 
 if ! ollama list | grep -q "nomic-embed-text"; then
