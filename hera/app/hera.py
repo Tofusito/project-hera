@@ -17,7 +17,7 @@ logger = setup_logger(__name__)
 
 def main():
     # Configuración de servicios
-    model = "llama3.2:3b"
+    model = os.getenv('OLLAMA_MODEL')
     ollama_url = "http://ollama_service:11434/api/chat"
     ollama_healthcheck_url = "http://ollama_service:11434/api/tags"
     anythingllm_url = "http://anythingllm:3001"  # URL base sin el endpoint

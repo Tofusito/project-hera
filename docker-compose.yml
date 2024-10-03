@@ -13,6 +13,7 @@ services:
     networks:
       - hera-network
     environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
       - OLLAMA_HOST=${OLLAMA_HOST}
       - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
       - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
@@ -63,7 +64,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - LLM_PROVIDER=${LLM_PROVIDER}
       - OLLAMA_BASE_PATH=${OLLAMA_BASE_PATH}
-      - OLLAMA_MODEL_PREF=${OLLAMA_MODEL_PREF}
+      - OLLAMA_MODEL_PREF=${OLLAMA_MODEL}
       - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
       - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT}
       - EMBEDDING_ENGINE=${EMBEDDING_ENGINE}
@@ -101,6 +102,7 @@ services:
       - API_KEY=${API_KEY}
       - PASSWORD=${PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
     depends_on:
       - ollama
       - anythingllm

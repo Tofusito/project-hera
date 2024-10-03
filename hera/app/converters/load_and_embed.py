@@ -94,8 +94,8 @@ class LoadAndEmbed:
         for file_name in os.listdir(self.directory):
             file_path = os.path.join(self.directory, file_name)
             if os.path.isfile(file_path):
-                base_name = os.path.splitext(file_name)[0]
-                expected_title = f"{base_name}.txt"
+                # Usa el nombre completo del archivo, incluyendo su extensión
+                expected_title = file_name
 
                 if expected_title in existing_titles:
                     logger.info(f"El archivo '{expected_title}' ya ha sido cargado. Omitiendo.")
@@ -112,3 +112,4 @@ class LoadAndEmbed:
             self.update_embeddings(adds)
         else:
             logger.info("No hay nuevos documentos para actualizar embeddings.")
+
