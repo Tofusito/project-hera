@@ -28,7 +28,7 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
     for root, dirs, files in os.walk(input_dir):
         logger.info(f"Explorando directorio: {root}")
         for file in files:
-            if file.lower().endswith(('.txt', '.json')):
+            if file.lower().endswith(('.txt', '.csv')):
                 ruta_archivo = os.path.join(root, file)
                 logger.info(f"Procesando archivo: {ruta_archivo}")
 
@@ -47,27 +47,15 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                         "A continuación se presenta contenido que necesita ser limpiado y reformateado. "
                         "Por favor, realiza las siguientes acciones:\n"
                         "1. Elimina cualquier dato redundante.\n"
+                        "2. Toma de entrada el contenido entre [INICIO] y [FIN].\n"
                         "2. Corrige errores ortográficos y de formato.\n"
-                        "3. Mantén la misma estructura y formato del archivo original.\n"
-                        "Devuelve únicamente el contenido limpio y reformateado entre los marcadores [INICIO] y [FIN], todo en una sola línea si es posible.\n\n"
+                        "Devuelve únicamente el contenido limpio y reformateado, no devuelvas más, sólo el texto, sin el inicio y fin\n\n"
                         "[INICIO]\n"
                         f"{contenido}\n"
                         "[FIN]"
                     )
                     logger.info(f"Prompt preparado para reformatear: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
                     logger.info(f"Enviando a la API de Ollama...")
-
-                    # Guardar el prompt en un archivo dentro de output_dir
-                    nombre_prompt = f"prompt_{os.path.splitext(file)[0]}.txt"
-                    ruta_prompt = os.path.join(output_dir, nombre_prompt)
-                    try:
-                        with open(ruta_prompt, 'w', encoding='utf-8') as f_prompt:
-                            f_prompt.write(prompt)
-                        logger.info(f"✅ Prompt guardado en: {ruta_prompt}")
-                    except Exception as e:
-                        logger.error(f"❌ Error al guardar el prompt: {ruta_prompt}. Detalles: {e}")
-                        # Opcional: Puedes decidir si continuar o no en caso de error al guardar el prompt
-                        # continue
 
                     # Enviar la solicitud a Ollama
                     respuesta = ollama_service.make_request(prompt)
