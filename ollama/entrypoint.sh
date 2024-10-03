@@ -5,7 +5,7 @@ set -x
 ollama serve &
 
 # Descargar los modelos si no están presentes
-if ! ollama list | grep -q "ollama run llama3.2:3b"; then
+if ! ollama list | grep -q "ollama run $OLLAMA_MODEL"; then
   echo "Descargando $OLLAMA_MODEL..."
   ollama pull $OLLAMA_MODEL
 else

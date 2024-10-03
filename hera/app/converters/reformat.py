@@ -7,7 +7,8 @@ import logging
 def process_documents(input_dir: str, output_dir: str, ollama_service, logger: logging.Logger):
     """
     Recorre todos los archivos .txt y .json en input_dir, los envía a la API de Ollama
-    para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir.
+    para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir,
+    incluyendo el prompt utilizado para cada archivo.
 
     :param input_dir: Directorio donde se encuentran los archivos originales.
     :param output_dir: Directorio donde se guardarán los archivos procesados.
@@ -42,22 +43,31 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                         continue
 
                     # Preparar el prompt para Ollama
-                    if file.lower().endswith('.json'):
-                        prompt = (
-                            "I am providing a json file, I want you to reformat this file to clean nulls, order it and better readable. Return the following content but reformated, only this: \n\n"
-                            f"{contenido}"
-                        )
-                        solicitud_tipo = 'reformateo del contenido JSON'
-                        logger.info(f"Prompt preparado para JSON: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
-                    else:
-                        prompt = (
-                            "I am providing a text file, I want you to reformat this to be better readable. Return the following content but reformated, only this: \n\n"
-                            f"{contenido}"
-                        )
-                        solicitud_tipo = 'reformateo del texto'
-                        logger.info(f"Prompt preparado para texto: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
+                    prompt = (
+                        "A continuación se presenta contenido que necesita ser limpiado y reformateado. "
+                        "Por favor, realiza las siguientes acciones:\n"
+                        "1. Elimina cualquier dato redundante.\n"
+                        "2. Corrige errores ortográficos y de formato.\n"
+                        "3. Mantén la misma estructura y formato del archivo original.\n"
+                        "Devuelve únicamente el contenido limpio y reformateado entre los marcadores [INICIO] y [FIN], todo en una sola línea si es posible.\n\n"
+                        "[INICIO]\n"
+                        f"{contenido}\n"
+                        "[FIN]"
+                    )
+                    logger.info(f"Prompt preparado para reformatear: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
+                    logger.info(f"Enviando a la API de Ollama...")
 
-                    logger.info(f"Enviando {solicitud_tipo} a la API de Ollama...")
+                    # Guardar el prompt en un archivo dentro de output_dir
+                    nombre_prompt = f"prompt_{os.path.splitext(file)[0]}.txt"
+                    ruta_prompt = os.path.join(output_dir, nombre_prompt)
+                    try:
+                        with open(ruta_prompt, 'w', encoding='utf-8') as f_prompt:
+                            f_prompt.write(prompt)
+                        logger.info(f"✅ Prompt guardado en: {ruta_prompt}")
+                    except Exception as e:
+                        logger.error(f"❌ Error al guardar el prompt: {ruta_prompt}. Detalles: {e}")
+                        # Opcional: Puedes decidir si continuar o no en caso de error al guardar el prompt
+                        # continue
 
                     # Enviar la solicitud a Ollama
                     respuesta = ollama_service.make_request(prompt)
@@ -76,13 +86,20 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                                 logger.info(f"Estructura completa de la respuesta: {respuesta}")
                                 continue
                         elif isinstance(respuesta, str):
-                            contenido_str = respuesta.strip()
-                            logger.info(f"Respuesta es una cadena. Contenido: {contenido_str[:200]}...")
+                            # Extraer solo el contenido entre los marcadores si están presentes
+                            inicio = respuesta.find("[INICIO]") + len("[INICIO]")
+                            fin = respuesta.find("[FIN]")
+                            if inicio != -1 and fin != -1:
+                                contenido_str = respuesta[inicio:fin].strip()
+                                logger.info(f"Contenido extraído entre marcadores: {contenido_str[:200]}...")
+                            else:
+                                contenido_str = respuesta.strip()
+                                logger.info(f"Respuesta es una cadena. Contenido: {contenido_str[:200]}...")
                         else:
                             logger.error(f"❌ Respuesta de la API en formato inesperado para el archivo: {ruta_archivo} (tipo: {type(respuesta)})")
                             continue
 
-                        # Preparar la ruta de salida para el archivo de texto
+                        # Preparar la ruta de salida para el archivo de texto reformateado
                         nombre_salida = os.path.splitext(file)[0] + "_reformateado.txt"
                         ruta_salida = os.path.join(output_dir, nombre_salida)
                         logger.info(f"Guardando contenido reformateado en: {ruta_salida}")

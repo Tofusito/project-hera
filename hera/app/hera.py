@@ -71,11 +71,11 @@ def main():
         logger.info("Conversión de documentos completada.")
 
         # Ejecutar procesamiento adicional de documentos (adaptación/reformateo)
-        # logger.info("Ejecutando procesamiento adicional de documentos para RAG...")
-        # input_dir = "/app/documentos/converted"
-        # output_dir = "/app/documentos/reformateados"
-        # process_documents(input_dir, output_dir, ollama_service, logger)
-        # logger.info("Procesamiento adicional de documentos completado.")
+        logger.info("Ejecutando procesamiento adicional de documentos para RAG...")
+        input_dir = "/app/documentos/converted"
+        output_dir = "/app/documentos/reformateados"
+        process_documents(input_dir, output_dir, ollama_service, logger)
+        logger.info("Procesamiento adicional de documentos completado.")
 
         # Cargar y embebedar documentos procesados
         logger.info("Cargando y embebiendo documentos...")
