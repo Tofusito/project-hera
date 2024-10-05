@@ -107,7 +107,6 @@ class AnythingLLMService:
         headers = {
             'Accept': '*/*',
             'Content-Type': 'application/json',  # Cambiado a 'application/json' para mejor compatibilidad
-            'Authorization': 'null',
         }
 
         logger.debug(f"Realizando POST a {enable_multi_user_url} con payload: {payload}")

@@ -1,17 +1,13 @@
 import os
-import json
-import requests
-from typing import Optional
 import logging
 
 def process_documents(input_dir: str, output_dir: str, ollama_service, logger: logging.Logger):
     """
-    Recorre todos los archivos .txt y .json en input_dir, los envía a la API de Ollama
-    para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir,
-    incluyendo el prompt utilizado para cada archivo.
+    Recorre todos los archivos .txt y .csv en input_dir, los envía a la API de Ollama
+    para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir.
 
     :param input_dir: Directorio donde se encuentran los archivos originales.
-    :param output_dir: Directorio donde se guardarán los archivos procesados.
+    :param output_dir: Directorio donde se guardaran los archivos procesados.
     :param ollama_service: Instancia de OllamaService para realizar solicitudes a la API.
     :param logger: Instancia de logger para registrar el proceso.
     """
@@ -22,85 +18,52 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
             os.makedirs(output_dir)
             logger.info(f"Directorio de salida creado: {output_dir}")
         except Exception as e:
-            logger.error(f"❌ No se pudo crear el directorio de salida '{output_dir}': {e}")
+            logger.error(f"No se pudo crear el directorio de salida '{output_dir}': {e}")
             return
 
-    for root, dirs, files in os.walk(input_dir):
-        logger.info(f"Explorando directorio: {root}")
+    for root, _, files in os.walk(input_dir):
         for file in files:
             if file.lower().endswith(('.txt', '.csv')):
                 ruta_archivo = os.path.join(root, file)
                 logger.info(f"Procesando archivo: {ruta_archivo}")
 
                 try:
-                    # Leer el contenido del archivo como texto plano
                     with open(ruta_archivo, 'r', encoding='utf-8') as f:
                         contenido = f.read()
-                    logger.info(f"Contenido cargado (primeros 200 caracteres): {contenido[:200]}...")
 
                     if not contenido.strip():
-                        logger.warning(f"⚠️ El archivo '{ruta_archivo}' está vacío o no contiene contenido válido.")
+                        logger.warning(f"El archivo '{ruta_archivo}' está vacío o no contiene contenido válido.")
                         continue
 
-                    # Preparar el prompt para Ollama
+                    # Prompt optimizado para la API de Ollama
                     prompt = (
-                        "A continuación se presenta contenido que necesita ser limpiado y reformateado. "
-                        "Por favor, realiza las siguientes acciones:\n"
-                        "1. Elimina cualquier dato redundante.\n"
-                        "2. Toma de entrada el contenido entre [INICIO] y [FIN].\n"
-                        "2. Corrige errores ortográficos y de formato.\n"
-                        "Devuelve únicamente el contenido limpio y reformateado, no devuelvas más, sólo el texto, sin el inicio y fin\n\n"
+                        "Por favor procesa el siguiente contenido entre [INICIO] y [FIN] usando un razonamiento de cadena de pensamiento para obtener el mejor resultado:\n"
+                        "1. Primero analiza el contenido identificando cualquier redundancia, error gramatical o formato inconsistente.\n"
+                        "2. Luego, realiza una limpieza eliminando datos redundantes, frases repetitivas y texto innecesario.\n"
+                        "3. Corrige todos los errores ortográficos y de gramática detectados.\n"
+                        "4. Reformatea el contenido para que sea claro, conciso y consistente, sin cambiar su significado.\n"
+                        "5. Finalmente, revisa el contenido limpio para asegurar que sea coherente y directo.\n"
+                        "6. Devuelve únicamente el contenido limpio y reformateado, sin ninguna explicación adicional, sin análisis, sin comentarios, sin marcas, sin adornos.\n"
                         "[INICIO]\n"
                         f"{contenido}\n"
                         "[FIN]"
                     )
-                    logger.info(f"Prompt preparado para reformatear: {prompt[:200]}...")  # Muestra los primeros 200 caracteres del prompt
                     logger.info(f"Enviando a la API de Ollama...")
 
                     # Enviar la solicitud a Ollama
                     respuesta = ollama_service.make_request(prompt)
-                    logger.info(f"Respuesta recibida de Ollama (tipo: {type(respuesta)}): {respuesta}")
 
-                    if respuesta:
-                        logger.info(f"Procesando respuesta para el archivo: {ruta_archivo}")
-
-                        # Extraer el contenido de la respuesta
-                        if isinstance(respuesta, dict):
-                            if 'message' in respuesta and 'content' in respuesta['message']:
-                                contenido_str = respuesta['message']['content']
-                                logger.info(f"Contenido extraído de 'message' -> 'content': {contenido_str[:200]}...")
-                            else:
-                                logger.error(f"❌ La estructura de la respuesta no contiene 'message' -> 'content' para el archivo: {ruta_archivo}")
-                                logger.info(f"Estructura completa de la respuesta: {respuesta}")
-                                continue
-                        elif isinstance(respuesta, str):
-                            # Extraer solo el contenido entre los marcadores si están presentes
-                            inicio = respuesta.find("[INICIO]") + len("[INICIO]")
-                            fin = respuesta.find("[FIN]")
-                            if inicio != -1 and fin != -1:
-                                contenido_str = respuesta[inicio:fin].strip()
-                                logger.info(f"Contenido extraído entre marcadores: {contenido_str[:200]}...")
-                            else:
-                                contenido_str = respuesta.strip()
-                                logger.info(f"Respuesta es una cadena. Contenido: {contenido_str[:200]}...")
-                        else:
-                            logger.error(f"❌ Respuesta de la API en formato inesperado para el archivo: {ruta_archivo} (tipo: {type(respuesta)})")
-                            continue
-
-                        # Preparar la ruta de salida para el archivo de texto reformateado
+                    if isinstance(respuesta, str) and respuesta.strip():
+                        contenido_str = respuesta.strip()
                         nombre_salida = os.path.splitext(file)[0] + "_reformateado.txt"
                         ruta_salida = os.path.join(output_dir, nombre_salida)
-                        logger.info(f"Guardando contenido reformateado en: {ruta_salida}")
 
-                        # Guardar la respuesta en un archivo de texto
-                        try:
-                            with open(ruta_salida, 'w', encoding='utf-8') as f_salida:
-                                f_salida.write(contenido_str)
-                            logger.info(f"✅ Archivo reformateado guardado en: {ruta_salida}")
-                        except Exception as e:
-                            logger.error(f"❌ Error al guardar el archivo reformateado: {ruta_salida}. Detalles: {e}")
+                        with open(ruta_salida, 'w', encoding='utf-8') as f_salida:
+                            f_salida.write(contenido_str)
+
+                        logger.info(f"Archivo reformateado guardado en: {ruta_salida}")
                     else:
-                        logger.error(f"❌ No se pudo procesar el archivo: {ruta_archivo}. La API devolvió una respuesta vacía.")
+                        logger.error(f"No se pudo procesar el archivo: {ruta_archivo}. Respuesta vacía o inesperada.")
 
                 except Exception as e:
-                    logger.error(f"❌ Error al procesar el archivo '{ruta_archivo}': {e}", exc_info=True)
+                    logger.error(f"Error al procesar el archivo '{ruta_archivo}': {e}", exc_info=True)
