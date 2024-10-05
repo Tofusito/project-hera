@@ -12,7 +12,7 @@ class LoadAndEmbed:
         logger.debug("Inicializando LoadAndEmbed")
         self.workspace = os.getenv('WORKSPACE', 'assistant')
         self.base_url = "http://anythingllm:3001"
-        self.directory = "/app/documentos/converted"
+        self.directory = "/app/documentos/reformateados"
 
         logger.debug(f"Workspace configurado como: {self.workspace}")
         logger.debug(f"Base URL configurada como: {self.base_url}")
@@ -111,6 +111,15 @@ class LoadAndEmbed:
                     logger.debug(f"Respuesta recibida al cargar archivo: {response.status_code}")
                     if response.status_code == 200:
                         logger.info(f"Archivo {file_name} cargado correctamente.")
+                        try:
+                            os.remove(file_path)
+                            logger.info(f"Archivo {file_name} eliminado después de cargar correctamente.")
+                            # Verificar si la carpeta está vacía y eliminarla si es el caso
+                            if not os.listdir(self.directory):
+                                os.rmdir(self.directory)
+                                logger.info(f"Carpeta '{self.directory}' eliminada porque está vacía.")
+                        except Exception as e:
+                            logger.error(f"Error al eliminar el archivo {file_name} o la carpeta '{self.directory}': {e}")
                         try:
                             os.remove(file_path)
                             logger.info(f"Archivo {file_name} eliminado después de cargar correctamente.")

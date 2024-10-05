@@ -1,10 +1,11 @@
 import os
 import logging
+import shutil
+
 
 def process_documents(input_dir: str, output_dir: str, ollama_service, logger: logging.Logger):
     """
-    Recorre todos los archivos .txt y .csv en input_dir, los envía a la API de Ollama
-    para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir.
+    Recorre todos los archivos en input_dir, los envía a la API de Ollama para adaptarlos o reformatearlos según corresponda y guarda los resultados en output_dir.
 
     :param input_dir: Directorio donde se encuentran los archivos originales.
     :param output_dir: Directorio donde se guardaran los archivos procesados.
@@ -23,11 +24,12 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
 
     for root, _, files in os.walk(input_dir):
         for file in files:
-            if file.lower().endswith(('.txt', '.csv')):
-                ruta_archivo = os.path.join(root, file)
-                logger.info(f"Procesando archivo: {ruta_archivo}")
+            ruta_archivo = os.path.join(root, file)
+            logger.info(f"Procesando archivo: {ruta_archivo}")
 
-                try:
+            try:
+                if file.lower().endswith('.txt'):
+                    # Procesar archivos .txt con la API de Ollama
                     with open(ruta_archivo, 'r', encoding='utf-8') as f:
                         contenido = f.read()
 
@@ -62,8 +64,23 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                             f_salida.write(contenido_str)
 
                         logger.info(f"Archivo reformateado guardado en: {ruta_salida}")
+
+                        # Borrar el archivo original después de ser reformateado
+                        os.remove(ruta_archivo)
+                        logger.info(f"Archivo original '{ruta_archivo}' eliminado después del reformateo.")
                     else:
                         logger.error(f"No se pudo procesar el archivo: {ruta_archivo}. Respuesta vacía o inesperada.")
 
-                except Exception as e:
-                    logger.error(f"Error al procesar el archivo '{ruta_archivo}': {e}", exc_info=True)
+                elif file.lower().endswith(('.csv', '.xlsx')):
+                    # Mover archivos .csv y .xlsx sin procesar
+                    ruta_salida = os.path.join(output_dir, file)
+                    shutil.move(ruta_archivo, ruta_salida)
+                    logger.info(f"Archivo '{file}' movido a: {ruta_salida}")
+
+                else:
+                    # Eliminar archivos que no sean .txt, .csv, o .xlsx
+                    os.remove(ruta_archivo)
+                    logger.info(f"Archivo '{ruta_archivo}' no es compatible y ha sido eliminado.")
+
+            except Exception as e:
+                logger.error(f"Error al procesar el archivo '{ruta_archivo}': {e}", exc_info=True)
