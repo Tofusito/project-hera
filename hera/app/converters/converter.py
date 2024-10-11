@@ -62,6 +62,24 @@ class Converter:
             logger.error(f"Error al convertir DOC/DOCX {file_path}: {e}")
             return None
 
+    def convert_code_to_txt(self, file_path):
+        """Convierte archivos de código (.js, .py) a txt"""
+        try:
+            txt_file_name = generate_unique_filename(file_path, '.txt')
+            output_file = os.path.join(self.output_dir, txt_file_name)
+
+            with open(file_path, 'r', encoding='utf-8') as f:
+                code_content = f.read()
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(code_content)
+
+            logger.info(f"Archivo de código convertido a texto: {file_path} -> {output_file}")
+            return output_file
+        except Exception as e:
+            logger.error(f"Error al convertir archivo de código {file_path}: {e}")
+            return None
+
     def copy_file(self, file_path):
         """Copia archivos directamente a la carpeta de salida"""
         try:
@@ -87,9 +105,9 @@ class Converter:
             success = self.convert_pdf_to_txt(file_path) is not None
         elif ext in ['.doc', '.docx']:
             success = self.convert_doc_to_txt(file_path) is not None
-        elif ext in ['.xls', '.xlsx', '.md', '.txt']:
-            success = self.copy_file(file_path) is not None
-        elif ext in ['.json']:
+        elif ext in ['.js', '.py']:
+            success = self.convert_code_to_txt(file_path) is not None
+        elif ext in ['.xls', '.xlsx', '.md', '.txt', '.json']:
             success = self.copy_file(file_path) is not None
         else:
             logger.info(f"Formato no soportado: {file_path}")

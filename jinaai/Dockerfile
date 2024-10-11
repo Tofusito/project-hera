@@ -1,10 +1,18 @@
-FROM jinaai/jina:3-py38-perf
+# Usar una imagen base de Python
+FROM python:3.9-slim
 
-# make sure the files are copied into the image
-COPY . /executor_root/
+# Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
 
-WORKDIR /executor_root
+# Copiar el archivo de requerimientos y luego instalar las dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r requirements.txt
+# Copiar el código del servidor en el contenedor
+COPY app.py .
 
-ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
+# Exponer el puerto 8000 para acceder al servidor
+EXPOSE 8000
+
+# Comando para ejecutar la aplicación con uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

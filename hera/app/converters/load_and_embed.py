@@ -12,7 +12,7 @@ class LoadAndEmbed:
         logger.debug("Inicializando LoadAndEmbed")
         self.workspace = os.getenv('WORKSPACE', 'assistant')
         self.base_url = "http://anythingllm:3001"
-        self.directory = "/app/documentos/reformateados"
+        self.directory = "/app/documentos/converted"
 
         logger.debug(f"Workspace configurado como: {self.workspace}")
         logger.debug(f"Base URL configurada como: {self.base_url}")
