@@ -71,7 +71,7 @@ def process_documents(input_dir: str, output_dir: str, ollama_service, logger: l
                     else:
                         logger.error(f"No se pudo procesar el archivo: {ruta_archivo}. Respuesta vacía o inesperada.")
 
-                elif file.lower().endswith(('.csv', '.xlsx')):
+                elif file.lower().endswith(('.csv', '.xlsx','.json')):
                     # Mover archivos .csv y .xlsx sin procesar
                     ruta_salida = os.path.join(output_dir, file)
                     shutil.move(ruta_archivo, ruta_salida)

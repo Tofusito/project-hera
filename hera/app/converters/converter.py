@@ -89,6 +89,8 @@ class Converter:
             success = self.convert_doc_to_txt(file_path) is not None
         elif ext in ['.xls', '.xlsx', '.md', '.txt']:
             success = self.copy_file(file_path) is not None
+        elif ext in ['.json']:
+            success = self.copy_file(file_path) is not None
         else:
             logger.info(f"Formato no soportado: {file_path}")
 
