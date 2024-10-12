@@ -14,20 +14,35 @@ class OllamaService:
         self.model = model
         self.headers = {"Content-Type": "application/json"}
 
-    def wait_until_available(self, timeout=180, interval=5):
-        logger.info("Esperando a que Ollama esté disponible...")
-        start_time = time.time()
-        while time.time() - start_time < timeout:
+    def wait_until_models_loaded(self, max_retries=10, interval=60):
+        logger.info("Esperando que los modelos de Ollama se carguen...")
+        retries = 0
+
+        while retries < max_retries:
             try:
                 response = requests.get(self.healthcheck_url)
+                logger.info(f"Respuesta del healthcheck: Status: {response.status_code}, Content: {response.text}")
+                
                 if response.status_code == 200:
-                    logger.info("Ollama está disponible.")
-                    return True
-            except requests.exceptions.RequestException:
-                pass
-            logger.warning(f"Ollama no está disponible, reintentando en {interval} segundos...")
+                    data = response.json()
+                    logger.info(f"Datos de respuesta: {data}")
+                    
+                    if data.get("models") and len(data["models"]) > 1:
+                        logger.info("Los modelos de Ollama están cargados y disponibles.")
+                        logger.info(f"Modelos disponibles: {data['models']}")
+                        return True
+                    else:
+                        retries += 1
+                        logger.warning(f"Los modelos de Ollama no están disponibles. Intento {retries}/{max_retries}. Reintentando en {interval} segundos...")
+                else:
+                    logger.warning(f"No se pudo conectar a Ollama. Código de estado: {response.status_code}. Intento {retries}/{max_retries}. Reintentando en {interval} segundos...")
+                    logger.info(f"Contenido de la respuesta: {response.text}")
+            except requests.exceptions.RequestException as e:
+                retries += 1
+                logger.error(f"Error al intentar conectarse a Ollama: {e}. Intento {retries}/{max_retries}. Reintentando en {interval} segundos...")
             time.sleep(interval)
-        logger.error("Tiempo de espera agotado para Ollama.")
+
+        logger.error("Tiempo de espera agotado para que los modelos de Ollama estén disponibles.")
         return False
 
     def make_request(self, content, retry_delay=60):

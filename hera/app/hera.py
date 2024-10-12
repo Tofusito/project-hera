@@ -37,7 +37,7 @@ def main():
 
     # Esperar a que Ollama y AnythingLLM estén disponibles
     logger.info("Esperando a que Ollama y AnythingLLM estén disponibles...")
-    if not ollama_service.wait_until_available() or not anythingllm_service.wait_until_available():
+    if not ollama_service.wait_until_models_loaded() or not anythingllm_service.wait_until_available():
         logger.error("No se pudo conectar a Ollama o AnythingLLM. Servicio(s) no disponible(s).")
         return
 
