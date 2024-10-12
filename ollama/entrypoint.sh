@@ -1,25 +1,24 @@
 #!/bin/bash
 
-set -x
+set -ex
 
 ollama serve &
 
-# Descargar los modelos si no están presentes
-if ! ollama list | grep -q "ollama run $OLLAMA_MODEL"; then
-  echo "Descargando $OLLAMA_MODEL..."
-  ollama pull $OLLAMA_MODEL
-else
-  echo "El modelo $OLLAMA_MODEL ya está presente."
-fi
+# Función para descargar un modelo si no está presente
+download_model() {
+    if ! ollama list | grep -q "$1"; then
+        echo "Descargando $1..."
+        ollama pull "$1"
+    else
+        echo "El modelo $1 ya está presente."
+    fi
+}
 
-if ! ollama list | grep -q "mxbai-embed-large:latest"; then
-  echo "Descargando mxbai-embed-large:latest..."
-  ollama pull mxbai-embed-large:latest
-else
-  echo "El modelo mxbai-embed-large:latest ya está presente."
-fi
+# Descargar modelos en paralelo
+download_model "$OLLAMA_MODEL" &
+download_model "$OLLAMA_MODEL_EMBED" &
 
-# Ejecutar cualquier otro paso necesario aquí...
+# Esperar a que terminen todas las tareas en segundo plano
 wait
 
 # Fin del script
