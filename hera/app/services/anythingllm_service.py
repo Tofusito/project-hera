@@ -301,7 +301,9 @@ class AnythingLLMService:
                             "unnecessary information."),
             "queryRefusalResponse": ("No relevant data was found in the workspace to answer this query. "
                                     "Please verify the context or try rephrasing your question."),
-            "openAiTemp": openai_temp
+            "openAiTemp": openai_temp,
+            "topN": 20,
+            "similarityThreshold":0.25
         }
 
         logger.debug(f"Realizando solicitud POST a {update_url} con payload: {payload}")
