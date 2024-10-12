@@ -2,7 +2,7 @@
 
 import logging
 
-def setup_logger(name, level=logging.INFO):
+def setup_logger(name, level=logging.DEBUG):
     logger = logging.getLogger(name)
     if not logger.hasHandlers():
         logger.setLevel(level)

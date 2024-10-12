@@ -265,6 +265,58 @@ class AnythingLLMService:
         except requests.exceptions.RequestException as e:
             logger.error(f"Excepción al crear el workspace: {e}")
             return False
+        
+    def update_workspace_assistant(self, username, chat_provider="default", chat_mode="query", openai_history=20, openai_temp=0.5):
+        """
+        Actualiza el workspace del asistente con nuevos parámetros.
+
+        Args:
+            chat_provider (str): Proveedor de chat (por defecto "default").
+            chat_mode (str): Modo de operación del asistente (por defecto "query").
+            openai_history (int): Cantidad de interacciones históricas que OpenAI puede usar en contexto.
+            openai_temp (float): Temperatura del modelo OpenAI para ajustar la creatividad de las respuestas.
+
+        Returns:
+            bool: True si la actualización fue exitosa, False en caso contrario.
+        """
+        logger.info(f"Intentando actualizar el workspace del asistente...")
+        # Generar el JWT
+        token = self.generate_jwt(username)
+        logger.debug(f"JWT generado: {token}")        
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+        update_url = f"{self.base_url}/api/workspace/{self.workspace}/update"
+        payload = {
+            "chatProvider": chat_provider,
+            "chatMode": chat_mode,
+            "openAiHistory": openai_history,
+            "openAiPrompt": ("Based on the provided conversation history, contextual information, "
+                            "and the user's follow-up question, generate a concise and accurate response. "
+                            "Ensure your answer directly addresses the user's question, adhering to any specific "
+                            "instructions or preferences given. Provide informative and relevant insights, avoiding any "
+                            "unnecessary information."),
+            "queryRefusalResponse": ("No relevant data was found in the workspace to answer this query. "
+                                    "Please verify the context or try rephrasing your question."),
+            "openAiTemp": openai_temp
+        }
+
+        logger.debug(f"Realizando solicitud POST a {update_url} con payload: {payload}")
+        try:
+            response = requests.post(update_url, headers=headers, json=payload)
+            logger.debug(f"Respuesta de la actualización del workspace: {response.status_code} - {response.text}")
+            if response.status_code in [200, 201]:
+                logger.info(f"Actualización del workspace exitosa.")
+                return True
+            else:
+                logger.error(f"Error al actualizar el workspace: {response.status_code} - {response.text}")
+                return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Excepción al actualizar el workspace: {e}")
+            return False
 
     def ensure_workspace(self, username):
         """
@@ -293,6 +345,11 @@ class AnythingLLMService:
             # Crear el workspace
             if not self.create_workspace(username):
                 logger.error(f"No se pudo crear el workspace '{self.workspace}'.")
+                return False
+            
+            # Actualiza el workspace
+            if not self.update_workspace_assistant(username):
+                logger.error(f"No se pudo actualizar el workspace '{self.workspace}'.")
                 return False
 
             logger.info("Configuración inicial completada exitosamente.")
