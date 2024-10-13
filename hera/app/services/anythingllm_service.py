@@ -269,7 +269,7 @@ class AnythingLLMService:
             logger.error(f"Excepción al crear el workspace: {e}")
             return False
         
-    def update_workspace_assistant(self, username, workspace, chat_model, chat_provider="ollama", chat_mode="query", openai_history=20, openai_temp=0.5):
+    def update_workspace_assistant(self, username, workspace, chat_model, chat_provider="ollama", openai_history=20, openai_temp=0.5):
         """
         Actualiza el workspace del asistente con nuevos parámetros.
 
@@ -295,7 +295,7 @@ class AnythingLLMService:
         update_url = f"{self.base_url}/api/workspace/{workspace}/update"
         payload = {
             "chatProvider": chat_provider,
-            "chatMode": chat_mode,
+            "chatMode": "chat",
             "chatModel": chat_model,
             "openAiHistory": openai_history,
             "openAiPrompt": ("Based on the provided conversation history, contextual information, "

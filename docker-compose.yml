@@ -79,9 +79,6 @@ services:
       - TTS_PROVIDER=${TTS_PROVIDER}
       - PASSWORDMINCHAR=${PASSWORDMINCHAR}
       - WORKSPACE=${WORKSPACE}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-      - OLLAMA_MODEL_EMBED=${OLLAMA_MODEL_EMBED}
-      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
     volumes:
       - anythingllm_storage:/app/server/storage
     restart: always
@@ -108,6 +105,7 @@ services:
       - PASSWORD=${PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
     depends_on:
       - ollama
       - anythingllm
