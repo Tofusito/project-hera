@@ -15,6 +15,7 @@ services:
     environment:
       - OLLAMA_MODEL=${OLLAMA_MODEL}
       - OLLAMA_MODEL_EMBED=${OLLAMA_MODEL_EMBED}
+      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
       - OLLAMA_HOST=${OLLAMA_HOST}
       - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
       - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
@@ -78,6 +79,9 @@ services:
       - TTS_PROVIDER=${TTS_PROVIDER}
       - PASSWORDMINCHAR=${PASSWORDMINCHAR}
       - WORKSPACE=${WORKSPACE}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - OLLAMA_MODEL_EMBED=${OLLAMA_MODEL_EMBED}
+      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
     volumes:
       - anythingllm_storage:/app/server/storage
     restart: always

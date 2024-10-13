@@ -17,10 +17,13 @@ class AnythingLLMService:
         """
         self.base_url = url.rstrip('/')  # Asegura que no termine con '/'
         self.workspace = os.getenv('WORKSPACE')
+        self.workspace_code = "code"
         self.password = os.getenv('PASSWORD')  # Obtenemos la contraseña de la variable de entorno
         self.jwt_secret = os.getenv('JWT_SECRET')  # Obtenemos el JWT_SECRET de la variable de entorno
         self.api_key = os.getenv('API_KEY')
         self.api_key_path = "/app/session/api_key"  # Directorio donde se guardará la API Key
+        self.ollama_assistant_model = os.getenv('OLLAMA_MODEL')
+        self.ollama_code_model = os.getenv('OLLAMA_MODEL_CODE')
 
 
         logger.info(f"Inicializando AnythingLLMService con base_url: {self.base_url}")
@@ -230,7 +233,7 @@ class AnythingLLMService:
             logger.info("API Key no encontrada, es el primer arranque.")
             return False
 
-    def create_workspace(self, username):
+    def create_workspace(self, workspace):
         """
         Crea un nuevo workspace utilizando el Bearer token generado dinámicamente.
 
@@ -240,7 +243,7 @@ class AnythingLLMService:
         Returns:
             bool: True si el workspace se creó exitosamente, False en caso contrario.
         """
-        logger.info(f"Intentando crear el workspace '{self.workspace}'...")
+        logger.info(f"Intentando crear el workspace '{workspace}'...")
         token = self.api_key
         headers = {
             'Authorization': f'Bearer {token}',
@@ -250,14 +253,14 @@ class AnythingLLMService:
 
         create_url = f"{self.base_url}/api/v1/workspace/new"
         payload = {
-            "name": self.workspace
+            "name": workspace
         }
         logger.debug(f"Realizando solicitud POST a {create_url} con payload: {payload}")
         try:
             response = requests.post(create_url, headers=headers, json=payload)
             logger.debug(f"Respuesta de la creación de workspace: {response.status_code} - {response.text}")
             if response.status_code in [200, 201]:
-                logger.info(f"Workspace '{self.workspace}' creado exitosamente.")
+                logger.info(f"Workspace '{workspace}' creado exitosamente.")
                 return True
             else:
                 logger.error(f"Error al crear el workspace: {response.status_code} - {response.text}")
@@ -266,7 +269,7 @@ class AnythingLLMService:
             logger.error(f"Excepción al crear el workspace: {e}")
             return False
         
-    def update_workspace_assistant(self, username, chat_provider="default", chat_mode="query", openai_history=20, openai_temp=0.5):
+    def update_workspace_assistant(self, username, workspace, chat_model, chat_provider="ollama", chat_mode="query", openai_history=20, openai_temp=0.5):
         """
         Actualiza el workspace del asistente con nuevos parámetros.
 
@@ -289,10 +292,11 @@ class AnythingLLMService:
             'Accept': 'application/json'
         }
 
-        update_url = f"{self.base_url}/api/workspace/{self.workspace}/update"
+        update_url = f"{self.base_url}/api/workspace/{workspace}/update"
         payload = {
             "chatProvider": chat_provider,
             "chatMode": chat_mode,
+            "chatModel": chat_model,
             "openAiHistory": openai_history,
             "openAiPrompt": ("Based on the provided conversation history, contextual information, "
                             "and the user's follow-up question, generate a concise and accurate response. "
@@ -344,14 +348,24 @@ class AnythingLLMService:
                 logger.error("No se pudo generar la API Key.")
                 return False
 
-            # Crear el workspace
-            if not self.create_workspace(username):
+            # Crear el workspace asistente
+            if not self.create_workspace(self.workspace):
                 logger.error(f"No se pudo crear el workspace '{self.workspace}'.")
                 return False
             
-            # Actualiza el workspace
-            if not self.update_workspace_assistant(username):
+            # Crear el workspace programador
+            if not self.create_workspace(self.workspace_code):
+                logger.error(f"No se pudo crear el workspace '{self.workspace_code}'.")
+                return False
+            
+            # Actualiza el workspace asistente
+            if not self.update_workspace_assistant(username, self.workspace, self.ollama_assistant_model):
                 logger.error(f"No se pudo actualizar el workspace '{self.workspace}'.")
+                return False
+            
+            # Actualiza el workspace programador
+            if not self.update_workspace_assistant(username, self.workspace_code, self.ollama_code_model):
+                logger.error(f"No se pudo actualizar el workspace '{self.workspace_code}'.")
                 return False
 
             logger.info("Configuración inicial completada exitosamente.")

@@ -27,7 +27,7 @@ class OllamaService:
                     data = response.json()
                     logger.info(f"Datos de respuesta: {data}")
                     
-                    if data.get("models") and len(data["models"]) > 1:
+                    if data.get("models") and len(data["models"]) == 3:
                         logger.info("Los modelos de Ollama están cargados y disponibles.")
                         logger.info(f"Modelos disponibles: {data['models']}")
                         return True

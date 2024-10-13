@@ -17,6 +17,7 @@ download_model() {
 # Descargar modelos en paralelo
 download_model "$OLLAMA_MODEL" &
 download_model "$OLLAMA_MODEL_EMBED" &
+download_model "$OLLAMA_MODEL_CODE" &
 
 # Esperar a que terminen todas las tareas en segundo plano
 wait
