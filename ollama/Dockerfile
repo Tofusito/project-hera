@@ -25,7 +25,7 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Exponer el puerto para Ollama (puerto predeterminado 11434)
-EXPOSE 11434
+EXPOSE 11488
 
 # Usar el entrypoint personalizado
 CMD ["/usr/local/bin/entrypoint.sh"]

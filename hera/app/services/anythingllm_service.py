@@ -22,8 +22,6 @@ class AnythingLLMService:
         self.jwt_secret = os.getenv('JWT_SECRET')  # Obtenemos el JWT_SECRET de la variable de entorno
         self.api_key = os.getenv('API_KEY')
         self.api_key_path = "/app/session/api_key"  # Directorio donde se guardará la API Key
-        self.ollama_assistant_model = os.getenv('OLLAMA_MODEL')
-        self.ollama_code_model = os.getenv('OLLAMA_MODEL_CODE')
 
 
         logger.info(f"Inicializando AnythingLLMService con base_url: {self.base_url}")
@@ -358,15 +356,15 @@ class AnythingLLMService:
                 logger.error(f"No se pudo crear el workspace '{self.workspace_code}'.")
                 return False
             
-            # Actualiza el workspace asistente
-            if not self.update_workspace_assistant(username, self.workspace, self.ollama_assistant_model):
-                logger.error(f"No se pudo actualizar el workspace '{self.workspace}'.")
-                return False
+            # # Actualiza el workspace asistente
+            # if not self.update_workspace_assistant(username, self.workspace, self.ollama_assistant_model):
+            #     logger.error(f"No se pudo actualizar el workspace '{self.workspace}'.")
+            #     return False
             
-            # Actualiza el workspace programador
-            if not self.update_workspace_assistant(username, self.workspace_code, self.ollama_code_model):
-                logger.error(f"No se pudo actualizar el workspace '{self.workspace_code}'.")
-                return False
+            # # Actualiza el workspace programador
+            # if not self.update_workspace_assistant(username, self.workspace_code, self.ollama_code_model):
+            #     logger.error(f"No se pudo actualizar el workspace '{self.workspace_code}'.")
+            #     return False
 
             logger.info("Configuración inicial completada exitosamente.")
             return True

@@ -7,28 +7,19 @@ services:
       dockerfile: Dockerfile
     container_name: ollama_service
     ports:
-      - "11434:11434"
+      - "11488:11488"
     volumes:
       - ollama_data:/root/.ollama
     networks:
       - hera-network
-    environment:
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-      - OLLAMA_MODEL_EMBED=${OLLAMA_MODEL_EMBED}
-      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
-      - OLLAMA_HOST=${OLLAMA_HOST}
-      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
-      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
-      - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
-      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL}
-      - OLLAMA_NOPRUNE=${OLLAMA_NOPRUNE}
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    env_file:
+      - .env
+      - ollama/.env
     deploy:
       resources:
         limits:
-          cpus: "12.0"
-          memory: "18g"
+          cpus: "4.0"
+          memory: "4g"
         reservations:
           devices:
           - driver: nvidia
@@ -61,24 +52,9 @@ services:
       - "3001:3001"
     cap_add:
       - SYS_ADMIN
-    environment:
-      - STORAGE_DIR=${STORAGE_DIR}
-      - JWT_SECRET=${JWT_SECRET}
-      - LLM_PROVIDER=${LLM_PROVIDER}
-      - OLLAMA_BASE_PATH=${OLLAMA_BASE_PATH}
-      - OLLAMA_MODEL_PREF=${OLLAMA_MODEL}
-      - OLLAMA_MODEL_TOKEN_LIMIT=${OLLAMA_MODEL_TOKEN_LIMIT}
-      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT}
-      - EMBEDDING_ENGINE=${EMBEDDING_ENGINE}
-      - EMBEDDING_BASE_PATH=${EMBEDDING_BASE_PATH}
-      - EMBEDDING_MODEL_PREF=${EMBEDDING_MODEL_PREF}
-      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=${EMBEDDING_MODEL_MAX_CHUNK_LENGTH}
-      - VECTOR_DB=${VECTOR_DB}
-      - CHROMA_ENDPOINT=${CHROMA_ENDPOINT}
-      - WHISPER_PROVIDER=${WHISPER_PROVIDER}
-      - TTS_PROVIDER=${TTS_PROVIDER}
-      - PASSWORDMINCHAR=${PASSWORDMINCHAR}
-      - WORKSPACE=${WORKSPACE}
+    env_file:
+      - .env
+      - anythingllm/.env
     volumes:
       - anythingllm_storage:/app/server/storage
     restart: always
@@ -98,14 +74,9 @@ services:
       context: ./hera
       dockerfile: Dockerfile
     container_name: hera
-    environment:
-      - PYTHONUNBUFFERED=1
-      - WORKSPACE=${WORKSPACE}
-      - API_KEY=${API_KEY}
-      - PASSWORD=${PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-      - OLLAMA_MODEL_CODE=${OLLAMA_MODEL_CODE}
+    env_file:
+      - .env
+      - hera/.env
     depends_on:
       - ollama
       - anythingllm
