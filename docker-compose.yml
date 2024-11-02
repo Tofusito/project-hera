@@ -69,6 +69,18 @@ services:
       - ollama
       - chroma
 
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566"  # API Gateway (puerto de acceso principal)
+    environment:
+      - SERVICES=secretsmanager
+      - DEFAULT_REGION=us-east-1
+    networks:
+      - hera-network
+    volumes:
+      - localstack-vol:/var/lib/localstack  # Volumen de Docker
+
   hera:
     build:
       context: ./hera
@@ -94,3 +106,4 @@ volumes:
   ollama_data:
   anythingllm_storage:
   chroma_data:
+  localstack-vol:

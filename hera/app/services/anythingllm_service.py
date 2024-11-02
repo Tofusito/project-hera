@@ -3,29 +3,38 @@ import time
 import requests
 import jwt
 import datetime
+import boto3
 from utils.logger import setup_logger
+
 
 logger = setup_logger(__name__)
 
+# Configurar el cliente de Secrets Manager para LocalStack
+secrets_client = boto3.client(
+    'secretsmanager',
+    region_name='us-east-1',
+    endpoint_url=os.getenv('AWS_ENDPOINT').rstrip('/'),
+    aws_access_key_id='dummy',  # Credenciales dummy para LocalStack
+    aws_secret_access_key='dummy'
+)
+
 class AnythingLLMService:
-    def __init__(self, url):
+    def __init__(self):
         """
         Inicializa el servicio AnythingLLM.
 
         Args:
             url (str): La URL base del servicio AnythingLLM.
         """
-        self.base_url = url.rstrip('/')  # Asegura que no termine con '/'
         
+        self.base_url = os.getenv('ANYTHINGLLM_ENDPOINT').rstrip('/')
+
         workspace = os.getenv('WORKSPACES').split(',')
         # Eliminamos posibles espacios en blanco.
         self.workspace = [name.strip() for name in workspace if name.strip()]
         
         self.password = os.getenv('PASSWORD')  # Obtenemos la contraseña de la variable de entorno
         self.jwt_secret = os.getenv('JWT_SECRET')  # Obtenemos el JWT_SECRET de la variable de entorno
-        self.api_key = os.getenv('API_KEY')
-        self.api_key_path = "/app/session/api_key"  # Directorio donde se guardará la API Key
-
 
         logger.info(f"Inicializando AnythingLLMService con base_url: {self.base_url}")
         logger.info(f"Workspace obtenido: {self.workspace}")
@@ -44,6 +53,27 @@ class AnythingLLMService:
             logger.error("JWT_SECRET no está definida en las variables de entorno.")
             raise ValueError("JWT_SECRET no definida")
 
+    def get_api_key(self):
+        """
+        Recupera un secreto desde AWS Secrets Manager.
+        
+        Args:
+            secret_name (str): El nombre del secreto.
+            
+        Returns:
+            str: El valor del secreto como una cadena JSON si existe, None si no existe.
+        """
+        try:
+            response = secrets_client.get_secret_value(SecretId='anythingllm_api_key')
+            logger.info("API Key encontrada en Secrets Manager.")
+            return response['SecretString']
+        except secrets_client.exceptions.ResourceNotFoundException:
+            logger.info("El secreto 'anythingllm_api_key' no existe en Secrets Manager.")
+            return None
+        except Exception as e:
+            logger.error(f"Error al verificar la API Key en Secrets Manager: {e}")
+            return None
+    
     def generate_jwt(self, username):
         """
         Genera un token JWT para autenticación con el servicio.
@@ -129,13 +159,13 @@ class AnythingLLMService:
     def generate_api_key(self, username):
         """
         Genera una API Key utilizando un JWT para autenticación con una solicitud HTTP usando requests.
-        El `secret` recibido se guarda en un fichero local llamado `api_key`.
+        La API Key generada se almacena directamente en AWS Secrets Manager.
 
         Args:
             username (str): Nombre de usuario para generar el JWT y usarlo en la autenticación.
 
         Returns:
-            bool: True si la API key se generó y guardó correctamente, False en caso contrario.
+            bool: True si la API key se generó y guardó correctamente en Secrets Manager, False en caso contrario.
         """
         logger.info(f"Generando API Key para el usuario: {username}")
         
@@ -153,7 +183,7 @@ class AnythingLLMService:
             'Connection': 'keep-alive',
             'Origin': 'http://localhost:3001',
             'Referer': 'http://localhost:3001/settings/api-keys',
-            'Content-Type': 'application/json'  # Añadido para asegurar la correcta interpretación del payload
+            'Content-Type': 'application/json'
         }
 
         logger.debug(f"Realizando solicitud POST a {api_key_url} con headers: {headers}")
@@ -171,23 +201,18 @@ class AnythingLLMService:
                 api_secret = api_key_data['apiKey']['secret']
                 logger.info(f"API Secret obtenida: {api_secret}")
 
-                # Asegurar que el directorio /app/session exista
-                os.makedirs(os.path.dirname(self.api_key_path), exist_ok=True)
-
-                # Guardar el 'secret' en el archivo 'api_key'
+                # Guardar la API Key en Secrets Manager
                 try:
-                    with open(self.api_key_path, 'w') as f:
-                        f.write(api_secret)
-                    logger.info(f"La API Secret ha sido guardada correctamente en {self.api_key_path}.")
+                    secrets_client.create_secret(Name='anythingllm_api_key', SecretString=api_secret)
+                    logger.info("API Key creada en Secrets Manager.")
+                except secrets_client.exceptions.ResourceExistsException:
+                    logger.info("El secreto 'anythingllm_api_key' ya existe. Actualizando...")
+                    secrets_client.put_secret_value(SecretId='anythingllm_api_key', SecretString=api_secret)
+                    logger.info("API Key actualizada en Secrets Manager.")
                 except Exception as e:
-                    logger.error(f"Error al escribir en el archivo '{self.api_key_path}': {e}")
+                    logger.error(f"Error al almacenar la API Key en Secrets Manager: {e}")
                     return False
 
-                # Opcional: también establecer como variable de entorno
-                os.environ['API_KEY'] = api_secret
-                self.api_key = api_secret
-
-                logger.info("API Key establecida como variable de entorno y almacenada correctamente.")
                 return True
 
             else:
@@ -198,40 +223,24 @@ class AnythingLLMService:
             logger.error(f"Excepción durante la solicitud de generación de API Key: {e}")
             return False
 
-    def load_api_key(self):
-        """
-        Carga la API Key desde el archivo 'api_key' en /app/session si existe.
-
-        Returns:
-            bool: True si la API Key se cargó correctamente, False si el archivo no existe o hay un error.
-        """
-        logger.info(f"Intentando cargar la API Key desde el archivo '{self.api_key_path}'...")
-        if os.path.exists(self.api_key_path):
-            try:
-                with open(self.api_key_path, 'r') as f:
-                    self.api_key = f.read().strip()
-                logger.info(f"API Key cargada correctamente desde el archivo '{self.api_key_path}': {self.api_key}")
-                return True
-            except Exception as e:
-                logger.error(f"Error al leer el archivo '{self.api_key_path}': {e}")
-                return False
-        else:
-            logger.info(f"El archivo '{self.api_key_path}' no existe.")
-            return False
-
     def check_api_key(self):
         """
-        Verifica si la API Key existe localmente.
+        Verifica si la API Key existe en AWS Secrets Manager.
 
         Returns:
-            bool: True si la API Key existe, False si no existe.
+            bool: True si la API Key se recuperó correctamente, False si no existe.
         """
-        logger.info("Verificando si la API Key existe localmente...")
-        if self.load_api_key():
-            logger.info("API Key encontrada.")
+        logger.info("Verificando si la API Key existe en Secrets Manager...")
+        try:
+            response = secrets_client.get_secret_value(SecretId='anythingllm_api_key')
+            logger.info("API Key encontrada en Secrets Manager.")
+            self.api_key = response['SecretString']  # Guardar la API Key recuperada
             return True
-        else:
-            logger.info("API Key no encontrada, es el primer arranque.")
+        except secrets_client.exceptions.ResourceNotFoundException:
+            logger.info("El secreto 'anythingllm_api_key' no existe en Secrets Manager.")
+            return False
+        except Exception as e:
+            logger.error(f"Error al verificar la API Key en Secrets Manager: {e}")
             return False
 
     def create_workspace(self, workspace):
@@ -245,7 +254,19 @@ class AnythingLLMService:
             bool: True si el workspace se creó exitosamente, False en caso contrario.
         """
         logger.info(f"Intentando crear el workspace '{workspace}'...")
-        token = self.api_key
+
+        # Intentar recuperar la API Key de Secrets Manager
+        try:
+            response = secrets_client.get_secret_value(SecretId='anythingllm_api_key')
+            token = response['SecretString']
+            logger.info("API Key obtenida desde Secrets Manager.")
+        except secrets_client.exceptions.ResourceNotFoundException:
+            logger.error("La API Key no existe en Secrets Manager. No se puede proceder.")
+            return False
+        except Exception as e:
+            logger.error(f"Error al obtener la API Key desde Secrets Manager: {e}")
+            return False
+
         headers = {
             'Authorization': f'Bearer {token}',
             'Content-Type': 'application/json',
@@ -268,61 +289,6 @@ class AnythingLLMService:
                 return False
         except requests.exceptions.RequestException as e:
             logger.error(f"Excepción al crear el workspace: {e}")
-            return False
-        
-    def update_workspace_assistant(self, username, workspace, chat_model, chat_provider="ollama", openai_history=20, openai_temp=0.5):
-        """
-        Actualiza el workspace del asistente con nuevos parámetros.
-
-        Args:
-            chat_provider (str): Proveedor de chat (por defecto "default").
-            chat_mode (str): Modo de operación del asistente (por defecto "query").
-            openai_history (int): Cantidad de interacciones históricas que OpenAI puede usar en contexto.
-            openai_temp (float): Temperatura del modelo OpenAI para ajustar la creatividad de las respuestas.
-
-        Returns:
-            bool: True si la actualización fue exitosa, False en caso contrario.
-        """
-        logger.info(f"Intentando actualizar el workspace del asistente...")
-        # Generar el JWT
-        token = self.generate_jwt(username)
-        logger.debug(f"JWT generado: {token}")        
-        headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
-
-        update_url = f"{self.base_url}/api/workspace/{workspace}/update"
-        payload = {
-            "chatProvider": chat_provider,
-            "chatMode": "chat",
-            "chatModel": chat_model,
-            "openAiHistory": openai_history,
-            "openAiPrompt": ("Based on the provided conversation history, contextual information, "
-                            "and the user's follow-up question, generate a concise and accurate response. "
-                            "Ensure your answer directly addresses the user's question, adhering to any specific "
-                            "instructions or preferences given. Provide informative and relevant insights, avoiding any "
-                            "unnecessary information."),
-            "queryRefusalResponse": ("No relevant data was found in the workspace to answer this query. "
-                                    "Please verify the context or try rephrasing your question."),
-            "openAiTemp": openai_temp,
-            "topN": 20,
-            "similarityThreshold":0.25
-        }
-
-        logger.debug(f"Realizando solicitud POST a {update_url} con payload: {payload}")
-        try:
-            response = requests.post(update_url, headers=headers, json=payload)
-            logger.debug(f"Respuesta de la actualización del workspace: {response.status_code} - {response.text}")
-            if response.status_code in [200, 201]:
-                logger.info(f"Actualización del workspace exitosa.")
-                return True
-            else:
-                logger.error(f"Error al actualizar el workspace: {response.status_code} - {response.text}")
-                return False
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Excepción al actualizar el workspace: {e}")
             return False
 
     def ensure_workspace(self, username):

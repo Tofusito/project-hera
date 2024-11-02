@@ -10,11 +10,11 @@ logger = setup_logger(__name__)
 
 def main():
     # Configuración de servicios
-    anythingllm_url = "http://anythingllm:3001"  # URL base sin el endpoint
+    anythingllm_service = AnythingLLMService()
 
-    anythingllm_service = AnythingLLMService(url=anythingllm_url)
+    input_dir = os.getenv('INPUT_DIR')
 
-    loader = LoadAndEmbed(input_dir="/app/documentos/input")
+    loader = LoadAndEmbed()
 
     # Esperar a que Ollama y AnythingLLM estén disponibles
     logger.info("Esperando a que Ollama y AnythingLLM estén disponibles...")
@@ -33,7 +33,7 @@ def main():
     logger.info("Workspace está listo para usarse.")
 
     # Obtener la API Key desde AnythingLLMService
-    api_key = anythingllm_service.api_key
+    api_key = anythingllm_service.get_api_key()
     if not api_key:
         logger.error("API Key no está disponible.")
         return
