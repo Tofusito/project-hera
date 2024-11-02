@@ -16,8 +16,11 @@ class AnythingLLMService:
             url (str): La URL base del servicio AnythingLLM.
         """
         self.base_url = url.rstrip('/')  # Asegura que no termine con '/'
-        self.workspace = os.getenv('WORKSPACE')
-        self.workspace_code = "code"
+        
+        workspace = os.getenv('WORKSPACES').split(',')
+        # Eliminamos posibles espacios en blanco.
+        self.workspace = [name.strip() for name in workspace if name.strip()]
+        
         self.password = os.getenv('PASSWORD')  # Obtenemos la contraseña de la variable de entorno
         self.jwt_secret = os.getenv('JWT_SECRET')  # Obtenemos el JWT_SECRET de la variable de entorno
         self.api_key = os.getenv('API_KEY')
@@ -216,7 +219,7 @@ class AnythingLLMService:
             logger.info(f"El archivo '{self.api_key_path}' no existe.")
             return False
 
-    def workspace_exists(self):
+    def check_api_key(self):
         """
         Verifica si la API Key existe localmente.
 
@@ -333,7 +336,7 @@ class AnythingLLMService:
             bool: True si el workspace existe o se creó exitosamente, False en caso contrario.
         """
         logger.info("Asegurando que el workspace exista...")
-        if not self.workspace_exists():
+        if not self.check_api_key():
             logger.info("Es el primer arranque. Iniciando el proceso de configuración inicial.")
 
             # Habilitar el modo multiusuario
@@ -346,28 +349,14 @@ class AnythingLLMService:
                 logger.error("No se pudo generar la API Key.")
                 return False
 
-            # Crear el workspace asistente
-            if not self.create_workspace(self.workspace):
-                logger.error(f"No se pudo crear el workspace '{self.workspace}'.")
-                return False
-            
-            # Crear el workspace programador
-            if not self.create_workspace(self.workspace_code):
-                logger.error(f"No se pudo crear el workspace '{self.workspace_code}'.")
-                return False
-            
-            # # Actualiza el workspace asistente
-            # if not self.update_workspace_assistant(username, self.workspace, self.ollama_assistant_model):
-            #     logger.error(f"No se pudo actualizar el workspace '{self.workspace}'.")
-            #     return False
-            
-            # # Actualiza el workspace programador
-            # if not self.update_workspace_assistant(username, self.workspace_code, self.ollama_code_model):
-            #     logger.error(f"No se pudo actualizar el workspace '{self.workspace_code}'.")
-            #     return False
+            for ws in self.workspace:
+                # Crear el workspace asistente
+                if not self.create_workspace(ws):
+                    logger.error(f"No se pudo crear el workspace '{ws}'.")
+                    return False
 
             logger.info("Configuración inicial completada exitosamente.")
             return True
 
-        logger.info(f"El workspace '{self.workspace}' ya está configurado.")
+        logger.info(f"AnythingLLM ya está configurado.")
         return True
