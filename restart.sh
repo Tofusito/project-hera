@@ -34,10 +34,7 @@ main() {
     print_colored "33" "Removing Docker volumes..."
     execute_command "docker volume rm project-hera_anythingllm_storage" "Failed to remove project-hera_anythingllm_storage volume"
     execute_command "docker volume rm project-hera_chroma_data" "Failed to remove project-hera_chroma_data volume"
-
-    # Remove API key
-    print_colored "33" "Removing API key..."
-    execute_command "sudo rm -rf hera/session/api_key" "Failed to remove API key"
+    execute_command "docker volume rm project-hera_localstack_data" "Failed to remove project-hera_localstack_data volume"
 
     print_colored "32" "Cleanup process completed!"
 }

@@ -76,10 +76,13 @@ services:
     environment:
       - SERVICES=secretsmanager
       - DEFAULT_REGION=us-east-1
+      - DEBUG=1
+      - PERSISTENCE=1
+      - LEGACY_DOCKER_CLIENT=true
     networks:
       - hera-network
     volumes:
-      - localstack-vol:/var/lib/localstack  # Volumen de Docker
+      - localstack_data:/var/lib/localstack
 
   hera:
     build:
@@ -106,4 +109,4 @@ volumes:
   ollama_data:
   anythingllm_storage:
   chroma_data:
-  localstack-vol:
+  localstack_data:

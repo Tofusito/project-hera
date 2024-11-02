@@ -225,17 +225,28 @@ class AnythingLLMService:
 
     def check_api_key(self):
         """
-        Verifica si la API Key existe en AWS Secrets Manager.
+        Verifica si la API Key existe en AWS Secrets Manager y la muestra para depuración.
 
         Returns:
             bool: True si la API Key se recuperó correctamente, False si no existe.
         """
         logger.info("Verificando si la API Key existe en Secrets Manager...")
         try:
+            logger.debug("Intentando obtener el valor del secreto con el ID 'anythingllm_api_key'.")
             response = secrets_client.get_secret_value(SecretId='anythingllm_api_key')
-            logger.info("API Key encontrada en Secrets Manager.")
-            self.api_key = response['SecretString']  # Guardar la API Key recuperada
-            return True
+
+            # Mostrar la respuesta completa para depuración
+            logger.debug(f"Respuesta completa de Secrets Manager: {response}")
+
+            if 'SecretString' in response:
+                logger.info("API Key encontrada en Secrets Manager.")
+                self.api_key = response['SecretString']  # Guardar la API Key recuperada
+                logger.debug(f"API Key recuperada: {self.api_key}")
+                return True
+            else:
+                logger.warning("La respuesta de Secrets Manager no contiene 'SecretString'. Verificar el formato del secreto.")
+                return False
+
         except secrets_client.exceptions.ResourceNotFoundException:
             logger.info("El secreto 'anythingllm_api_key' no existe en Secrets Manager.")
             return False
