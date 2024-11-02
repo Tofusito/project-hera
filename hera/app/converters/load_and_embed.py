@@ -8,11 +8,11 @@ logger = setup_logger(__name__, level=logging.DEBUG)
 logger.setLevel(logging.DEBUG)
 
 class LoadAndEmbed:
-    def __init__(self):
+    def __init__(self, input_dir):
         logger.debug("Inicializando LoadAndEmbed")
         self.workspace = os.getenv('WORKSPACE', 'assistant')
         self.base_url = "http://anythingllm:3001"
-        self.directory = "/app/documentos/converted"
+        self.directory = input_dir
 
         logger.debug(f"Workspace configurado como: {self.workspace}")
         logger.debug(f"Base URL configurada como: {self.base_url}")

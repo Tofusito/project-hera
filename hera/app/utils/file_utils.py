@@ -1,7 +1,6 @@
 # app/utils/file_utils.py
 
 import os
-import hashlib
 
 def generate_unique_filename(original_path, extension):
     """

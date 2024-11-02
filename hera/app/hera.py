@@ -1,7 +1,6 @@
 # app/main.py
 
 from services.anythingllm_service import AnythingLLMService
-from converters.converter import Converter
 from converters.load_and_embed import LoadAndEmbed
 from utils.logger import setup_logger
 import os
@@ -15,8 +14,7 @@ def main():
 
     anythingllm_service = AnythingLLMService(url=anythingllm_url)
 
-    converter = Converter(input_dir="/app/documentos/input", output_dir="/app/documentos/converted")
-    loader = LoadAndEmbed()
+    loader = LoadAndEmbed(input_dir="/app/documentos/input")
 
     # Esperar a que Ollama y AnythingLLM estén disponibles
     logger.info("Esperando a que Ollama y AnythingLLM estén disponibles...")
@@ -39,11 +37,6 @@ def main():
     if not api_key:
         logger.error("API Key no está disponible.")
         return
-
-    # Ejecutar conversión y procesamiento inicial de documentos
-    logger.info("Ejecutando conversión de documentos...")
-    converter.convert_and_process_documents()
-    logger.info("Conversión de documentos completada.")
 
     # Cargar y embebedar documentos procesados
     logger.info("Cargando y embebiendo documentos...")
