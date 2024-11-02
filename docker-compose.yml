@@ -61,8 +61,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "12.0"
-          memory: "8g"
+          cpus: "4.0"
+          memory: "4g"
     networks:
       - hera-network
     depends_on:
