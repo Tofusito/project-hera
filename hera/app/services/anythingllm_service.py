@@ -12,10 +12,10 @@ logger = setup_logger(__name__)
 # Configurar el cliente de Secrets Manager para LocalStack
 secrets_client = boto3.client(
     'secretsmanager',
-    region_name='us-east-1',
+    region_name=os.getenv('AWS_DEFAULT_REGION'),
     endpoint_url=os.getenv('AWS_ENDPOINT').rstrip('/'),
-    aws_access_key_id='dummy',  # Credenciales dummy para LocalStack
-    aws_secret_access_key='dummy'
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),  # Credenciales dummy para LocalStack
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 )
 
 class AnythingLLMService:
